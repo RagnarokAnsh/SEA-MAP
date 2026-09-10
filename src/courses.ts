@@ -65,13 +65,13 @@ export const RESOURCES: readonly ResourceRef[] = Object.freeze([
   {
     key: 'waste_picker_toolkit',
     title: 'Waste Picker Training Toolkit',
-    description: 'Practical companion material for informal-sector engagement.',
+    description: 'Practical companion material for informal-sector engagement',
     assets: [],
   },
   {
     key: 'tot_manual',
     title: 'Training of Trainers (ToT) Manual',
-    description: 'Facilitation material for delivering the RTP courses to your own learners.',
+    description: 'Facilitation material for delivering the RTP courses to your own learners',
     assets: [],
   },
 ] as const satisfies readonly ResourceRef[]);

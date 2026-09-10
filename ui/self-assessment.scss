@@ -182,7 +182,7 @@
     gap: var(--mantine-spacing-sm) 0;
 
     &[data-single] .self-assessment__path-step {
-      flex: 0 1 22rem;
+      flex: 0 1 50%;
     }
   }
 
@@ -216,10 +216,6 @@
     &:hover {
       border-color: var(--sa-border-hover);
       box-shadow: 0 1px 3px rgb(0 0 0 / 6%);
-    }
-
-    &[data-anchor] {
-      background-color: var(--sa-surface-soft);
     }
   }
 

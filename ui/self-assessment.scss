@@ -1,0 +1,334 @@
+// Styles for the self assessment quiz.
+// Everything is driven off mantine tokens + the site font vars so it picks up
+// whatever the theme is instead of hardcoding hexes.
+//
+// NOTE: the site loads Reddit Sans, Reddit Sans Condensed and Catamaran.  so
+// I've guessed condensed for headings - if the designs say Catamaran just
+// change --sa-font-heading below, everything else follows.
+
+.self-assessment {
+  --sa-font-heading: var(--font-reddit-sans-condensed, var(--mantine-font-family-headings));
+  --sa-font-body: var(--font-reddit-sans, var(--mantine-font-family));
+
+  --sa-border: var(--mantine-color-gray-3);
+  --sa-border-hover: var(--mantine-color-gray-5);
+  --sa-border-active: var(--mantine-primary-color-filled);
+  --sa-surface-active: var(--mantine-primary-color-light);
+  --sa-muted: var(--mantine-color-dimmed);
+  --sa-radius: var(--mantine-radius-md);
+
+  font-family: var(--sa-font-body);
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+
+  h1,
+  h2 {
+    font-family: var(--sa-font-heading);
+  }
+
+  // --- intro ---
+
+  &__intro {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mantine-spacing-md);
+  }
+
+  &__intro-title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.15;
+    margin: 0;
+  }
+
+  &__intro-lead {
+    font-size: var(--mantine-font-size-lg);
+    line-height: 1.6;
+    max-width: 34rem;
+    margin: 0;
+  }
+
+  &__intro-detail {
+    color: var(--sa-muted);
+    max-width: 34rem;
+    margin: 0;
+  }
+
+  &__cta {
+    margin-top: var(--mantine-spacing-sm);
+  }
+
+  // --- questions ---
+
+  &__progress {
+    margin-bottom: var(--mantine-spacing-xl);
+  }
+
+  &__question-eyebrow {
+    font-family: var(--sa-font-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: var(--mantine-font-size-xs);
+    font-weight: 600;
+    color: var(--mantine-primary-color-filled);
+    margin: 0 0 var(--mantine-spacing-xs);
+  }
+
+  &__question-key {
+    color: var(--sa-muted);
+    font-weight: 500;
+  }
+
+  &__question-title {
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+    line-height: 1.3;
+    margin: 0 0 var(--mantine-spacing-xs);
+  }
+
+  &__question-instruction {
+    color: var(--sa-muted);
+    margin: 0 0 var(--mantine-spacing-lg);
+  }
+
+  &__question-counter {
+    font-size: var(--mantine-font-size-sm);
+    color: var(--sa-muted);
+    margin: calc(var(--mantine-spacing-lg) * -1 + var(--mantine-spacing-xs)) 0
+      var(--mantine-spacing-md);
+
+    // nudge them when they've used both picks
+    &[data-at-cap] {
+      color: var(--mantine-primary-color-filled);
+      font-weight: 600;
+    }
+  }
+
+  // --- options ---
+  // each radio/checkbox is a clickable card. mantine puts its own class on the
+  // root, we just add ours on top.
+
+  &__option {
+    border: 1px solid var(--sa-border);
+    border-radius: var(--sa-radius);
+    padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
+
+    // make the whole card the hit target, not just the little circle
+    label {
+      cursor: pointer;
+      width: 100%;
+    }
+
+    &:hover:not([data-disabled]) {
+      border-color: var(--sa-border-hover);
+      background-color: var(--mantine-color-gray-0);
+    }
+
+    &[data-selected] {
+      border-color: var(--sa-border-active);
+      background-color: var(--sa-surface-active);
+    }
+
+    // greyed out once they hit the 2 pick limit
+    &[data-disabled],
+    &:has(input:disabled) {
+      opacity: 0.45;
+      cursor: not-allowed;
+
+      label {
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__other-text {
+    margin-top: var(--mantine-spacing-md);
+  }
+
+  &__errors {
+    list-style: none;
+    margin: var(--mantine-spacing-md) 0 0;
+    padding: 0;
+    color: var(--mantine-color-red-7);
+    font-size: var(--mantine-font-size-sm);
+  }
+
+  &__actions {
+    margin-top: var(--mantine-spacing-xl);
+    padding-top: var(--mantine-spacing-md);
+    border-top: 1px solid var(--sa-border);
+  }
+
+  // Next stays clickable when the question isnt done, it just looks quieter.
+  // Clicking it shows them what's missing, which is nicer than a dead button.
+  &__next[data-incomplete] {
+    opacity: 0.55;
+  }
+
+  // --- results ---
+
+  &__result-title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.15;
+    margin: 0 0 var(--mantine-spacing-sm);
+  }
+
+  &__result-intro {
+    color: var(--sa-muted);
+    line-height: 1.6;
+    margin: 0 0 var(--mantine-spacing-lg);
+  }
+
+  &__notice {
+    margin-bottom: var(--mantine-spacing-md);
+  }
+
+  &__section {
+    margin-top: var(--mantine-spacing-xl);
+  }
+
+  &__section-title {
+    font-size: 1.25rem;
+    margin: 0 0 var(--mantine-spacing-xs);
+  }
+
+  &__section-description {
+    color: var(--sa-muted);
+    font-size: var(--mantine-font-size-sm);
+    margin: 0 0 var(--mantine-spacing-md);
+  }
+
+  &__course-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mantine-spacing-sm);
+  }
+
+  &__course {
+    border: 1px solid var(--sa-border);
+    border-radius: var(--sa-radius);
+    padding: var(--mantine-spacing-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+
+    &:hover {
+      border-color: var(--sa-border-hover);
+    }
+  }
+
+  &__course-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 16rem;
+
+    &:hover &-title,
+    &:hover .self-assessment__course-title {
+      text-decoration: underline;
+    }
+  }
+
+  &__course-number {
+    font-family: var(--sa-font-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: var(--mantine-font-size-xs);
+    font-weight: 600;
+    color: var(--mantine-primary-color-filled);
+  }
+
+  &__course-title {
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  &__course-badge {
+    flex: 0 0 auto;
+  }
+
+  &__resource-description {
+    color: var(--sa-muted);
+    font-size: var(--mantine-font-size-sm);
+    margin: 4px 0 0;
+    flex-basis: 100%;
+  }
+
+  // downloads under the ToT materials - pdfs, videos, manuals
+  &__asset-list {
+    list-style: none;
+    margin: var(--mantine-spacing-sm) 0 0;
+    padding: 0;
+    flex-basis: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__asset {
+    display: flex;
+    align-items: baseline;
+    gap: var(--mantine-spacing-xs);
+    font-size: var(--mantine-font-size-sm);
+  }
+
+  &__asset-type {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: var(--mantine-font-size-xs);
+    color: var(--sa-muted);
+    border: 1px solid var(--sa-border);
+    border-radius: var(--mantine-radius-sm);
+    padding: 0 6px;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--mantine-spacing-md);
+    border: 1px dashed var(--sa-border);
+    border-radius: var(--sa-radius);
+    padding: var(--mantine-spacing-lg);
+  }
+
+  // retake on the left, open training on the right, like the pdf mockup
+  &__result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mantine-spacing-sm);
+    margin-top: var(--mantine-spacing-xl);
+    padding-top: var(--mantine-spacing-lg);
+    border-top: 1px solid var(--sa-border);
+
+    .mantine-Button-root {
+      flex: 1 1 12rem;
+    }
+  }
+}
+
+// phones - stack the nav buttons full width, they're easier to hit
+@media (max-width: 36rem) {
+  .self-assessment {
+    padding: var(--mantine-spacing-lg) var(--mantine-spacing-sm);
+
+    &__actions {
+      flex-direction: column-reverse;
+      gap: var(--mantine-spacing-xs);
+
+      .mantine-Button-root {
+        width: 100%;
+      }
+    }
+  }
+}

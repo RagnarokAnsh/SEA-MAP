@@ -1,0 +1,54 @@
+{
+  "name": "@sea-map/learning-path-assessment",
+  "version": "1.0.0",
+  "description": "Learner self-assessment to course-recommendation engine for the SEA-MaP training platform. Framework-agnostic: runs in Next.js, NestJS, or plain Node.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "INTEGRATION.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "tsx examples/demo.ts",
+    "preview": "vite"
+  },
+  "keywords": [
+    "sea-map",
+    "self-assessment",
+    "course-recommendation",
+    "learning-path"
+  ],
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "@mantine/core": "^9.5.1",
+    "@mantine/hooks": "^9.5.1",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^5.2.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sass": "^1.102.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^7.3.6",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,7 @@
+/* Just enough to stand the page up on its own. In their app the site layout
+   provides all of this. */
+body {
+  margin: 0;
+  background: #fff;
+  font-family: system-ui, sans-serif;
+}

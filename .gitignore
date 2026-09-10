@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Packaged source archive (redundant with the tracked sources)
+SEA-MAP.zip

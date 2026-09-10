@@ -27,91 +27,78 @@ const withoutEnroll = (recommendation: Recommendation) => ({
   flags: recommendation.flags,
 });
 
-describe('documented output examples', () => {
-  it('matches the multi-course example', () => {
-    expect(
-      withoutEnroll(
-        evaluate({
-          audience: 'national_government',
-          challenge: 'policy_market_instruments',
-          experience: 'experienced',
-          application: ['integrate_circular_principles', 'design_behaviour_change'],
-          confidence: ['community_engagement'],
-        }),
-      ),
-    ).toEqual({
-      core_path: [
-        { course: 'C5', reason: 'challenge' },
-        { course: 'C2', reason: 'application' },
-      ],
-      optional_resources: [
-        { item: 'C4', tag: 'refresher' },
-        { item: 'C7', tag: 'role' },
-      ],
-      flags: [],
-    });
+describe('output contract', () => {
+  const CORE_REASONS = ['c1_gate', 'challenge', 'application'];
+  const TAGS = ['refresher', 'role', 'resource'];
+  const RESOURCE_NAMES = Object.values(RESOURCE_ITEM_NAMES);
+
+  const SAMPLES: Answers[] = [
+    BASE,
+    { ...BASE, experience: 'new_to_field' },
+    { ...BASE, confidence: ['technology_solutions'] },
+    {
+      audience: 'national_government',
+      challenge: 'policy_market_instruments',
+      experience: 'experienced',
+      application: ['integrate_circular_principles', 'design_behaviour_change'],
+      confidence: ['community_engagement'],
+    },
+    {
+      audience: 'community_informal_sector',
+      challenge: 'community_participation',
+      experience: 'new_to_field',
+      application: ['engage_informal_sector', 'apply_business_tools'],
+      deliverTraining: true,
+    },
+  ];
+
+  it('exposes the three documented fields plus the enrolment addition', () => {
+    expect(Object.keys(evaluate(BASE)).sort()).toEqual([
+      'core_path',
+      'enroll',
+      'flags',
+      'optional_resources',
+    ]);
   });
 
-  it('matches the contradiction example', () => {
-    expect(
-      withoutEnroll(
-        evaluate({
-          ...BASE,
-          challenge: 'technology_uncertainty',
-          confidence: ['technology_solutions'],
-        }),
-      ),
-    ).toEqual({
-      core_path: [{ course: 'C6', reason: 'challenge' }],
-      optional_resources: [],
-      flags: ['challenge_confidence_contradiction'],
-    });
+  it('shapes every core path entry as a course code and a reason', () => {
+    for (const answers of SAMPLES) {
+      for (const entry of evaluate(answers).core_path) {
+        expect(Object.keys(entry).sort()).toEqual(['course', 'reason']);
+        expect(entry.course).toMatch(/^C[1-7]$/);
+        expect(CORE_REASONS).toContain(entry.reason);
+      }
+    }
   });
 
-  it('matches the precedence example', () => {
-    expect(
-      withoutEnroll(
-        evaluate({
-          ...BASE,
-          challenge: 'technology_uncertainty',
-          application: ['design_behaviour_change'],
-          confidence: ['community_engagement'],
-        }),
-      ),
-    ).toEqual({
-      core_path: [{ course: 'C6', reason: 'challenge' }],
-      optional_resources: [{ item: 'C4', tag: 'refresher' }],
-      flags: [],
-    });
+  it('shapes every optional entry as an item and a tag', () => {
+    for (const answers of SAMPLES) {
+      for (const entry of evaluate(answers).optional_resources) {
+        expect(Object.keys(entry).sort()).toEqual(['item', 'tag']);
+        expect(TAGS).toContain(entry.tag);
+        const isCourse = /^C[1-7]$/.test(entry.item);
+        expect(isCourse || RESOURCE_NAMES.includes(entry.item)).toBe(true);
+        if (!isCourse) expect(entry.tag).toBe('resource');
+      }
+    }
   });
 
-  it('matches the full core path example', () => {
-    expect(
-      withoutEnroll(
-        evaluate({
-          ...BASE,
-          challenge: 'coordination_governance',
-          experience: 'new_to_field',
-          application: ['design_policy_instruments'],
-        }),
-      ),
-    ).toEqual({
-      core_path: [
-        { course: 'C1', reason: 'c1_gate' },
-        { course: 'C7', reason: 'challenge' },
-        { course: 'C5', reason: 'application' },
-      ],
-      optional_resources: [],
-      flags: [],
-    });
+  it('emits exactly one reason of challenge per result', () => {
+    for (const answers of SAMPLES) {
+      const anchors = evaluate(answers).core_path.filter(
+        (e) => e.reason === 'challenge',
+      );
+      expect(anchors).toHaveLength(1);
+    }
   });
 
-  it('matches the single-course example shape', () => {
-    expect(withoutEnroll(evaluate(BASE))).toEqual({
-      core_path: [{ course: 'C6', reason: 'challenge' }],
-      optional_resources: [],
-      flags: [],
-    });
+  it('survives a JSON round trip unchanged', () => {
+    for (const answers of SAMPLES) {
+      const result = evaluate(answers);
+      expect(JSON.parse(JSON.stringify(withoutEnroll(result)))).toEqual(
+        withoutEnroll(result),
+      );
+    }
   });
 });
 

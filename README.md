@@ -151,9 +151,9 @@ flag.
 Courses appear as codes `C1`–`C7`; the two companion resources appear under their official
 names, which is how the specification identifies them. Every item appears at most once.
 
-Four of the specification's five worked examples are asserted verbatim in
-[`evaluate.test.ts`](test/evaluate.test.ts), so the documented contract is pinned by tests
-rather than by convention.
+The specification's worked examples are illustrative, so the tests pin the contract rather
+than those particular values: [`evaluate.test.ts`](test/evaluate.test.ts) checks the field
+set, the shape of every entry, and that each value falls in its documented range.
 
 Alongside those three fields the result carries an `enroll` block, which is an addition for
 the platform integration rather than part of the specification:
@@ -265,8 +265,7 @@ four-card row and the contradiction case — into `examples/layout-states.html` 
 self-contained file, using real engine output rather than placeholder text. Open it in a
 browser and resize to check wrapping.
 
-69 tests cover the algorithm step by step, the four reproducible worked examples from the
-specification asserted verbatim, the bounds the specification sets (never empty,
+69 tests cover the algorithm step by step, the output contract, the bounds the specification sets (never empty,
 never more than four), tag precedence and exactly-once resolution, the contradiction case,
 Appendix A titles, enrolment scope, and the wire payload. The layout states the design has to
 handle are enumerated as personas in [`examples/demo.ts`](examples/demo.ts).

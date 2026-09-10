@@ -1,8 +1,5 @@
 import type { Question } from './types.js';
 
-// Q1-Q6 worded the same as the pdf.
-// Render the quiz off this so the ui and the rules cant drift apart.
-// rules-coverage.test.ts breaks the build if an option here has no rule.
 export const QUESTIONS: readonly Question[] = Object.freeze([
   {
     id: 'audience',
@@ -10,7 +7,7 @@ export const QUESTIONS: readonly Question[] = Object.freeze([
     key: 'AUDIENCE',
     title: 'What best describes your main professional role or stakeholder category?',
     instruction:
-      'Select one - if your role spans more than one category, select your primary implementation responsibility.',
+      'Select one — if the role spans more than one category, select the primary implementation responsibility.',
     type: 'single',
     maxSelections: 1,
     required: true,
@@ -18,41 +15,35 @@ export const QUESTIONS: readonly Question[] = Object.freeze([
       {
         id: 'national_government',
         label: 'National government official',
-        hint: 'Policymaker, planner, or regulator (e.g., ministry or agency staff shaping national policy or regulation).',
+        hint: 'Policymaker, planner or regulator.',
       },
       {
         id: 'sub_national_government',
         label: 'Sub-national or local government official',
-        hint: 'Planning, service delivery, or coordination.',
+        hint: 'Planning, service delivery or coordination.',
       },
       {
         id: 'waste_practitioner',
         label: 'Waste management practitioner or technical officer',
-        hint: 'Operations, monitoring, or field implementation.',
+        hint: 'Operations, monitoring or field implementation.',
       },
       {
-        id: 'ngo_cso',
-        label: 'Non-governmental organization (NGO) or civil society professional (CSO)',
-        hint: 'Staff of formally registered non-governmental or civil society organizations working across regions or sectors.',
+        id: 'community_informal_sector',
+        label:
+          'Community-based organization, waste picker organization or informal-sector representative',
       },
+      { id: 'ngo_cso', label: 'NGO or civil society professional' },
       {
         id: 'private_sector',
-        label: 'Private sector professional',
-        hint: 'Business, industry, or SME.',
+        label: 'Private-sector professional',
+        hint: 'Business, industry or SME.',
       },
       {
         id: 'educator_youth',
-        label: 'School educator, youth organization, or awareness facilitator',
+        label: 'School educator, youth organization or awareness facilitator',
       },
-      {
-        id: 'tot_partner',
-        label: 'Training facilitator or trainer-of-trainers (ToT) partner',
-      },
-      {
-        id: 'other',
-        label: 'Other (please specify)',
-        requiresText: true,
-      },
+      { id: 'researcher_academic', label: 'Researcher, academic or technical expert' },
+      { id: 'other', label: 'Other (please specify)', requiresText: true },
     ],
   },
   {
@@ -61,165 +52,136 @@ export const QUESTIONS: readonly Question[] = Object.freeze([
     key: 'INTENDED APPLICATION',
     title:
       'How do you intend to apply the knowledge and skills gained from this training?',
-    instruction: 'Select up to 2.',
+    instruction:
+      'Select up to two professional applications. You may also select the training/facilitation option below if relevant — this doesn’t count toward the two-selection limit.',
     type: 'multi',
     maxSelections: 2,
     required: false,
     options: [
       {
-        id: 'policy_decision_making',
-        label: 'Inform or support policy, regulatory, or strategic decision-making',
-      },
-      {
-        id: 'design_implement_programmes',
-        label: 'Design, plan, or implement waste management programmes or projects',
-      },
-      {
-        id: 'engage_communities',
-        label: 'Engage, communicate with, or mobilize communities or stakeholders',
-      },
-      {
-        id: 'internal_sustainability',
+        id: 'interpret_plastic_types',
         label:
-          "Strengthen my organization's internal sustainability or waste management practices",
+          'Interpret plastic types, material properties and their implications for waste management, recycling, health or the environment',
+      },
+      {
+        id: 'assess_sources_impacts',
+        label:
+          'Assess the main sources, pathways and impacts of plastic waste to inform priorities or decisions',
+      },
+      {
+        id: 'identify_circular_opportunities',
+        label:
+          'Identify opportunities to prevent waste and keep materials in use through circular approaches',
+      },
+      {
+        id: 'integrate_circular_principles',
+        label:
+          'Integrate circular economy principles into strategies, programmes, operations or organizational practices',
+      },
+      {
+        id: 'improve_collection_systems',
+        label: 'Plan or improve segregation, collection, sorting and recycling systems',
+      },
+      {
+        id: 'hard_to_recycle_approaches',
+        label: 'Identify practical approaches for hard-to-recycle plastic waste',
+      },
+      {
+        id: 'design_behaviour_change',
+        label:
+          'Design communication, awareness and/or behaviour-change approaches that influence waste-related practices',
+      },
+      {
+        id: 'engage_informal_sector',
+        label:
+          'Engage communities, waste pickers or informal-sector actors effectively in planning or implementation',
+      },
+      {
+        id: 'design_policy_instruments',
+        label:
+          'Design, implement or assess EPR schemes, incentives or other policy/economic instruments',
+      },
+      {
+        id: 'apply_business_tools',
+        label:
+          'Use procurement, lifecycle assessment, financing or business tools to support more sustainable decisions',
+      },
+      {
+        id: 'choose_recycling_technology',
+        label: 'Decide between appropriate recycling technologies',
+      },
+      {
+        id: 'select_technical_solutions',
+        label:
+          'Assess or select appropriate technologies, digital tools or technical solutions for waste management',
+      },
+      {
+        id: 'coordinate_across_institutions',
+        label:
+          'Coordinate implementation across institutions, levels of government, sectors or stakeholder groups',
+      },
+      {
+        id: 'integrate_gender_inclusion',
+        label:
+          'Integrate gender equality, social inclusion and meaningful participation into waste policies or programmes',
       },
       {
         id: 'deliver_training',
         label:
-          'Design or deliver training, awareness, or capacity-building programmes for others',
-      },
-      {
-        id: 'research_data_technology',
-        label: 'Contribute to research, data analysis, or emerging technology',
-      },
-      {
-        id: 'advocacy_communications',
-        label: 'Support advocacy, communications, or public awareness campaigns',
-      },
-      {
-        id: 'professional_development',
-        label: 'Fulfil professional development or continuing education requirements',
-      },
-      {
-        id: 'social_inclusion',
-        label:
-          'Address social inclusion, human rights, gender equality, or informal waste sector considerations in my work',
-      },
-      {
-        id: 'product_design',
-        label:
-          'Develop or improve product design, packaging, or business models to reduce plastic use',
-      },
-      {
-        id: 'epr_compliance',
-        label:
-          'Support compliance with, or development of, extended producer responsibility (EPR) schemes or similar regulatory mechanisms',
-      },
-      {
-        id: 'operational_efficiency',
-        label:
-          'Improve the operational efficiency of waste collection, sorting, or recycling systems',
+          'Design or deliver training or capacity-building for others using the knowledge and materials from the RTP',
+        outsideSelectionLimit: true,
       },
     ],
   },
   {
-    id: 'challenges',
+    id: 'challenge',
     number: 3,
     key: 'CHALLENGES',
-    title:
-      'In which of the following areas do you face the greatest challenges applying this knowledge in your work?',
-    instruction: 'Select up to 2.',
-    type: 'multi',
-    maxSelections: 2,
-    required: false,
+    title: 'In which areas do you currently face the greatest difficulties in your work?',
+    instruction: 'Select one.',
+    type: 'single',
+    maxSelections: 1,
+    required: true,
     options: [
       {
-        id: 'scale_sources_impacts',
+        id: 'understand_plastic_types',
         label:
-          'Understanding the scale, sources, types, and environmental or health impacts of plastic waste',
+          'I need a clearer understanding of the types of plastics, where they come from, or their environmental and health implications',
       },
       {
-        id: 'circular_economy',
+        id: 'apply_circular_economy',
         label:
-          'Designing or transitioning to circular economy approaches or sustainable production models',
+          'It is difficult to translate circular economy principles into practical actions or operating approaches',
       },
       {
-        id: 'collection_recycling',
+        id: 'operate_waste_systems',
         label:
-          'Improving waste collection, sorting, recycling systems, or managing hard-to-recycle and legacy plastics',
+          'Waste prevention, segregation, collection, sorting or recycling systems are difficult to improve or operate effectively',
       },
       {
-        id: 'community_informal_sector',
+        id: 'community_participation',
         label:
-          'Engaging communities, integrating informal sector actors, or facilitating behavior change',
+          'Community participation, behaviour change, or meaningful integration of waste pickers and informal-sector actors is difficult to achieve',
       },
       {
-        id: 'policy_advocacy',
+        id: 'policy_market_instruments',
         label:
-          'Designing or advocating effective policies, regulations, incentives, or private sector engagement mechanisms',
+          'Policy or market instruments such as EPR, incentives, procurement or private-sector mechanisms are difficult to design, implement or apply effectively',
       },
       {
-        id: 'data_technology_monitoring',
+        id: 'technology_uncertainty',
+        label: 'Uncertainty about appropriate technologies makes decision-making difficult',
+      },
+      {
+        id: 'coordination_governance',
         label:
-          'Accessing, applying, or managing waste data, appropriate technologies, or monitoring and reporting systems',
-      },
-      {
-        id: 'governance_inclusion',
-        label:
-          'Coordinating governance across sectors, ensuring inclusive participation, or mainstreaming gender in implementation',
-      },
-    ],
-  },
-  {
-    id: 'interests',
-    number: 4,
-    key: 'INTEREST',
-    title: 'Areas you would like to strengthen your knowledge in',
-    instruction: 'Select up to 2.',
-    type: 'multi',
-    maxSelections: 2,
-    required: false,
-    options: [
-      {
-        id: 'scope_of_plastic_waste',
-        label: 'Understanding the scope of plastic waste',
-        hint: 'Where it comes from, how much there is, and its effects on health and the environment.',
-      },
-      {
-        id: 'circular_economy',
-        label: 'Shifting toward circular economy approaches',
-        hint: 'Sustainable production, consumption, and material-use models.',
-      },
-      {
-        id: 'practical_waste_reduction',
-        label: 'Practical waste reduction',
-        hint: 'Improving collection, sorting, and recycling, including hard-to-recycle or legacy plastics.',
-      },
-      {
-        id: 'community_behaviour_change',
-        label: 'Community engagement and behavior change',
-        hint: 'Working with communities and informal waste workers to shift attitudes and practices.',
-      },
-      {
-        id: 'policy_incentives_business',
-        label: 'Policy, incentives, and business tools',
-        hint: 'Extended producer responsibility (EPR), regulation, and engaging the private sector.',
-      },
-      {
-        id: 'data_technology',
-        label: 'Data and technology for waste management',
-        hint: 'Monitoring, reporting, and appropriate technology tools.',
-      },
-      {
-        id: 'governance_coordination',
-        label: 'Governance and coordination',
-        hint: 'Working across government levels and sectors, with inclusive and gender-responsive approaches.',
+          'Fragmented responsibilities, weak coordination, or difficulties ensuring inclusive and gender-responsive implementation affect progress',
       },
     ],
   },
   {
     id: 'experience',
-    number: 5,
+    number: 4,
     key: 'EXPERIENCE',
     title:
       'How would you describe your current level of knowledge or experience in plastic waste management or related fields?',
@@ -228,106 +190,98 @@ export const QUESTIONS: readonly Question[] = Object.freeze([
     maxSelections: 1,
     required: true,
     options: [
-      {
-        id: 'beginner',
-        label: 'Beginner',
-        hint: 'New to this topic with limited prior knowledge or experience.',
-      },
-      {
-        id: 'introductory',
-        label: 'Introductory',
-        hint: 'Some awareness of the topic but limited practical or technical experience.',
-      },
-      {
-        id: 'intermediate',
-        label: 'Intermediate',
-        hint: 'Working knowledge and some hands-on experience in relevant areas.',
-      },
-      {
-        id: 'advanced',
-        label: 'Advanced',
-        hint: 'Substantial knowledge and significant field or professional experience.',
-      },
-      {
-        id: 'expert',
-        label: 'Expert or specialist',
-        hint: 'Deep expertise in a specialized technical or policy area.',
-      },
+      { id: 'new_to_field', label: 'New to the field' },
+      { id: 'some_experience', label: 'Some experience' },
+      { id: 'experienced', label: 'Experienced' },
     ],
   },
   {
-    id: 'priorTraining',
-    number: 6,
-    key: 'PREVIOUS TRAINING',
+    id: 'confidence',
+    number: 5,
+    key: 'PRIOR COMPETENCE',
     title:
-      'Have you previously completed any training in the following fields and feel comfortable with it?',
-    instruction:
-      'Select all that apply. This never adds a course, it only marks courses you are already recommended as "take only if a refresher is needed".',
+      'In which of the following areas do you already feel confident applying your knowledge and skills, based on prior training or experience?',
+    instruction: 'Select all that apply.',
     type: 'multi',
     maxSelections: null,
     required: false,
     options: [
+      { id: 'none', label: 'None of these areas', exclusive: true },
       {
-        id: 'none',
-        label: 'No prior formal training in this area',
-        exclusive: true,
-      },
-      {
-        id: 'general_environmental',
-        label: 'General environmental or sustainability training',
-        hint: 'Foundational, not specific to plastic waste.',
+        id: 'plastic_materials',
+        label: 'Plastic materials, plastic pollution, sources and impacts',
       },
       {
         id: 'circular_economy',
-        label: 'Circular economy or sustainable production and consumption training',
+        label: 'Circular economy or sustainable production and consumption',
       },
       {
         id: 'waste_3rs',
-        label: 'Waste collection, sorting, or recycling (3Rs) training or hands-on experience',
+        label: 'Waste prevention, segregation, collection, sorting, recycling or 3Rs',
       },
       {
         id: 'community_engagement',
+        label: 'Community engagement, behaviour change or informal-sector integration',
+      },
+      {
+        id: 'policy_business_instruments',
         label:
-          'Training related to community engagement, behavior change, or social mobilization',
+          'EPR, GPP, LCA, environmental regulation or related policy/business instruments',
       },
       {
-        id: 'policy_epr',
-        label: 'Training related to policy development, EPR, or environmental regulation',
-      },
-      {
-        id: 'data_monitoring',
+        id: 'technology_solutions',
         label:
-          'Training related to data management, monitoring, or environmental technologies',
+          'Recycling technologies, digital tools or other technical solutions for waste management',
       },
       {
-        id: 'governance_advocacy',
-        label: 'Governance, cross-sector coordination, or policy advocacy training or experience',
-      },
-      {
-        id: 'academic_qualification',
-        label: 'Academic qualification in a relevant field',
-        hint: 'E.g. environmental science, engineering, public policy - not specific to plastic waste.',
+        id: 'governance_inclusion',
+        label:
+          'Governance, institutional coordination, participation, inclusion or gender-responsive implementation',
       },
     ],
   },
 ] as const satisfies readonly Question[]);
 
-// results screen copy, lifted from p5 of the pdf
 export const RESULT_COPY = Object.freeze({
-  title: 'Your Personalized Learning Path Is Ready',
-  intro:
-    'Thank you for completing the self-assessment. Based on your responses, a recommended learning path has been identified to help you strengthen your knowledge and skills in the areas most relevant to your current needs.',
-  mainLearningPath: {
-    heading: 'Main Learning Path',
-    description:
-      'These courses are recommended as your priority learning pathway based on your role and experience.',
+  title: 'Your recommended courses',
+  intro: {
+    single:
+      'Based on your answers, this is your recommended course. It isn’t mandatory, and you’re welcome to explore anything else in the catalogue whenever it’s useful.',
+    multiple:
+      'Based on your answers, here’s your suggested path. The order reflects what tends to work well for your situation — you’re welcome to take these in any order, or just focus on what matters most right now.',
   },
-  additionalRecommendedCourses: {
-    heading: 'Additional Recommended Courses',
-    description:
-      'These courses may also be valuable based on your intended application, areas of interest, and experience.',
+  coreLabels: {
+    anchor: 'Main recommendation',
+    additional: 'Also recommended',
   },
-  refresherLabel: 'Take only if a refresher is needed.',
+  coreRationale: {
+    c1_gate: 'A good starting point, based on your experience level.',
+    challenge: 'Matches the challenge you told us you’re facing.',
+    application: 'Matches how you plan to use the training.',
+    challengeWithConfidence:
+      'This matches the challenge you told us you’re facing. You’ve told us you’re already confident in this area too — it’s still worth taking if the difficulty persists.',
+  },
+  optional: {
+    heading: 'Also worth exploring',
+    subheading:
+      'These aren’t part of your core recommendation, but may still be useful given your role or background.',
+  },
+  optionalTagLabels: {
+    refresher: 'Optional refresher',
+    role: 'Relevant to your role',
+    resource: 'Resource',
+  },
+  optionalRationale: {
+    refresher:
+      'You told us you’re already confident here — revisit only if it’d be useful.',
+    role: 'Colleagues in similar roles often find this useful, though it wasn’t flagged by your answers.',
+    waste_picker_toolkit:
+      'A practical companion resource related to the challenge or application you selected.',
+    tot_manual:
+      'You indicated interest in delivering training to others — this manual supports that.',
+  },
+  footer:
+    'This path is a recommendation, not a requirement — every course in the catalogue remains open to you regardless of your answers.',
 });
 
 export function getQuestion(id: Question['id']): Question {

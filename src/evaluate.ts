@@ -3,32 +3,49 @@ import {
   APPLICATION_RULES,
   AUDIENCE_RULES,
   CHALLENGE_RULES,
-  DELIVER_TRAINING_FULL_SET,
+  CONFIDENCE_RULES,
   EXPERIENCE_RULES,
-  FOUNDATION_COURSE,
-  INTEREST_RULES,
-  PRIOR_TRAINING_RULES,
+  OPTIONAL_TAG_PRECEDENCE,
+  TRAINING_APPLICATION_RESOURCE,
 } from './rules.js';
 import type {
   Answers,
+  CorePathItem,
   CourseNumber,
   EngineConfig,
   EvaluateResult,
-  Notice,
-  NoticeCode,
+  OptionalItem,
+  OptionalTag,
   Recommendation,
-  RecommendedCourse,
-  SupplementaryResource,
+  RecommendationFlag,
+  ResourceKey,
+  SpecPayload,
 } from './types.js';
 import { AssessmentValidationError, validateAnswers } from './validate.js';
 
-type Bucket = Set<CourseNumber>;
+type QueueKey = `course:${CourseNumber}` | `resource:${ResourceKey}`;
 
-function addMany(bucket: Bucket, courses: readonly CourseNumber[]): void {
-  for (const course of courses) bucket.add(course);
+interface QueueEntry {
+  kind: 'course' | 'resource';
+  courseNumber?: CourseNumber;
+  resourceKey?: ResourceKey;
+  tag: OptionalTag;
+  order: number;
 }
 
-// Same as evaluate() but hands back validation problems instead of throwing.
+function tagRank(tag: OptionalTag): number {
+  return OPTIONAL_TAG_PRECEDENCE.indexOf(tag);
+}
+
+function confidenceCourses(answers: Answers): Set<CourseNumber> {
+  const courses = new Set<CourseNumber>();
+  for (const id of answers.confidence ?? []) {
+    const courseNumber = CONFIDENCE_RULES[id];
+    if (courseNumber !== null) courses.add(courseNumber);
+  }
+  return courses;
+}
+
 export function safeEvaluate(
   answers: Answers,
   overrides?: Partial<EngineConfig>,
@@ -37,152 +54,82 @@ export function safeEvaluate(
   if (issues.length > 0) return { ok: false, recommendation: null, issues };
 
   const config = resolveConfig(overrides);
-  const notices: Notice[] = [];
-  const pushNotice = (
-    code: NoticeCode,
-    audience: Notice['audience'],
-    message: string,
-  ) => {
-    if (!notices.some((n) => n.code === code)) notices.push({ code, message, audience });
+  const confident = confidenceCourses(answers);
+  const flags: RecommendationFlag[] = [];
+  const corePath: CorePathItem[] = [];
+  const queue = new Map<QueueKey, QueueEntry>();
+  let order = 0;
+
+  const inCorePath = (courseNumber: CourseNumber) =>
+    corePath.some((item) => item.courseNumber === courseNumber);
+
+  const queueCourse = (courseNumber: CourseNumber, tag: OptionalTag) => {
+    const key: QueueKey = `course:${courseNumber}`;
+    const existing = queue.get(key);
+    if (existing && tagRank(existing.tag) <= tagRank(tag)) return;
+    queue.set(key, {
+      kind: 'course',
+      courseNumber,
+      tag,
+      order: existing?.order ?? order++,
+    });
   };
 
-  const main: Bucket = new Set();
-  const additional: Bucket = new Set();
-  let owedTotMaterials = false;
+  const queueResource = (resourceKey: ResourceKey) => {
+    const key: QueueKey = `resource:${resourceKey}`;
+    if (queue.has(key)) return;
+    queue.set(key, { kind: 'resource', resourceKey, tag: 'resource', order: order++ });
+  };
 
-  // Q1 -> main.
-  // "other" contributes nothing and thats the end of it - no review queue,
-  // the rest of the questions carry the recommendation
-  const audienceRule = AUDIENCE_RULES[answers.audience];
-  addMany(main, audienceRule.main);
-  if (audienceRule.totMaterials) owedTotMaterials = true;
+  const challenge = CHALLENGE_RULES[answers.challenge];
+  corePath.push({ ...config.catalog[challenge.course], reason: 'challenge' });
+  if (challenge.resource) queueResource(challenge.resource);
+  if (confident.has(challenge.course)) flags.push('challenge_confidence_contradiction');
 
-  // Q2 -> main.
-  // course 1 never comes from here, thats Q5's job, except via the full set below
-  for (const application of answers.application ?? []) {
-    const rule = APPLICATION_RULES[application];
-
-    if (rule.fullSetWhenEnabled && config.deliverTrainingGrantsFullSet) {
-      addMany(main, DELIVER_TRAINING_FULL_SET);
-      owedTotMaterials = true;
-      continue;
-    }
-
-    addMany(main, rule.main);
+  const gateCourse = EXPERIENCE_RULES[answers.experience];
+  if (gateCourse !== null && !inCorePath(gateCourse)) {
+    if (confident.has(gateCourse)) queueCourse(gateCourse, 'refresher');
+    else corePath.unshift({ ...config.catalog[gateCourse], reason: 'c1_gate' });
   }
 
-  // Q3 -> additional
-  for (const challenge of answers.challenges ?? []) {
-    addMany(additional, CHALLENGE_RULES[challenge]);
+  for (const applicationId of answers.application ?? []) {
+    const rule = APPLICATION_RULES[applicationId];
+    if (rule.resource) queueResource(rule.resource);
+    if (inCorePath(rule.course)) continue;
+    if (confident.has(rule.course)) queueCourse(rule.course, 'refresher');
+    else corePath.push({ ...config.catalog[rule.course], reason: 'application' });
   }
 
-  // Q4 -> additional
-  for (const interest of answers.interests ?? []) {
-    addMany(additional, INTEREST_RULES[interest]);
-  }
+  if (answers.deliverTraining) queueResource(TRAINING_APPLICATION_RESOURCE);
 
-  // Q5 -> course 1 placement.
-  // only the ToT rule (or the Q2 full set) can have put it there already
-  const placement = EXPERIENCE_RULES[answers.experience];
-  const course1AlreadyInMain = main.has(FOUNDATION_COURSE);
+  const audience = AUDIENCE_RULES[answers.audience];
+  if (audience.primary !== null) queueCourse(audience.primary, 'role');
+  if (audience.secondary !== null) queueCourse(audience.secondary, 'role');
+  if (audience.resource !== null) queueResource(audience.resource);
 
-  if (course1AlreadyInMain && config.totOverridesCourse1Placement) {
-    // leave it. a trainer needs the foundations course no matter how
-    // experienced they say they are
-  } else {
-    // Q5 decides, so wipe whatever was there first
-    main.delete(FOUNDATION_COURSE);
-    additional.delete(FOUNDATION_COURSE);
-
-    if (placement === 'main') main.add(FOUNDATION_COURSE);
-    else if (placement === 'additional') additional.add(FOUNDATION_COURSE);
-    // 'none' -> not recommended at all
-  }
-
-  // a course can qualify for both lists, keep one copy
-  for (const courseNumber of [...additional]) {
-    if (!main.has(courseNumber)) continue;
-    if (config.duplicatePrecedence === 'main') additional.delete(courseNumber);
-    else main.delete(courseNumber);
-  }
-
-  // Q6 -> labels only
-  const refresherCourses = new Set<CourseNumber>();
-  for (const training of answers.priorTraining ?? []) {
-    const courseNumber = PRIOR_TRAINING_RULES[training];
-    if (courseNumber !== null) refresherCourses.add(courseNumber);
-  }
-
-  // ToT materials arent a course, theyre downloads. own bucket, never enrolled.
-  const supplementaryResources: SupplementaryResource[] = [];
-  if (owedTotMaterials) {
-    supplementaryResources.push({
-      key: 'tot_facilitation_materials',
-      title: config.totMaterials.title,
-      description: config.totMaterials.description,
-      assets: [...config.totMaterials.assets],
-    });
-    pushNotice(
-      'TOT_MATERIALS_INCLUDED',
-      'learner',
-      'Your path also includes the trainer-of-trainers facilitation materials. These are sent separately from the courses.',
+  const optionalResources: OptionalItem[] = [...queue.values()]
+    .filter((entry) => entry.kind === 'resource' || !inCorePath(entry.courseNumber!))
+    .sort((a, b) => tagRank(a.tag) - tagRank(b.tag) || a.order - b.order)
+    .map((entry) =>
+      entry.kind === 'course'
+        ? { ...config.catalog[entry.courseNumber!], kind: 'course', tag: entry.tag }
+        : { ...config.resources[entry.resourceKey!], kind: 'resource', tag: 'resource' },
     );
-  }
-
-  if (main.size === 0 && additional.size === 0 && supplementaryResources.length === 0) {
-    if (config.fallbackToCourse1WhenEmpty) {
-      additional.add(FOUNDATION_COURSE);
-    } else {
-      pushNotice(
-        'EMPTY_RECOMMENDATION',
-        'learner',
-        'Your answers dont point to a specific course. Have a look through the full catalogue and pick whatever fits.',
-      );
-    }
-  }
-
-  const toList = (bucket: Bucket): RecommendedCourse[] =>
-    [...bucket]
-      .sort((a, b) => a - b)
-      .map((courseNumber) => ({
-        ...config.catalog[courseNumber],
-        isRefresher: refresherCourses.has(courseNumber),
-      }));
-
-  const mainLearningPath = toList(main);
-  const additionalRecommendedCourses = toList(additional);
-  const everything = [...mainLearningPath, ...additionalRecommendedCourses];
-
-  const enrollable = everything.filter(
-    (course) => !(config.excludeRefreshersFromEnrollment && course.isRefresher),
-  );
-
-  const excludedRefreshers = everything.length - enrollable.length;
-  if (excludedRefreshers > 0) {
-    pushNotice(
-      'REFRESHERS_EXCLUDED_FROM_ENROLLMENT',
-      'internal',
-      `${excludedRefreshers} course(s) labelled as a refresher were left out of the enrolment list.`,
-    );
-  }
 
   const recommendation: Recommendation = {
-    mainLearningPath,
-    additionalRecommendedCourses,
-    supplementaryResources,
+    corePath,
+    optionalResources,
+    flags,
     enroll: {
-      courseNumbers: enrollable.map((c) => c.courseNumber),
-      courseIds: enrollable.map((c) => c.courseId),
-      slugs: enrollable.map((c) => c.slug),
+      courseNumbers: corePath.map((item) => item.courseNumber),
+      courseIds: corePath.map((item) => item.courseId),
+      slugs: corePath.map((item) => item.slug),
     },
-    notices,
   };
 
   return { ok: true, recommendation, issues: [] };
 }
 
-// Throws AssessmentValidationError on bad input. Use safeEvaluate if you'd
-// rather have the problems as data.
 export function evaluate(
   answers: Answers,
   overrides?: Partial<EngineConfig>,
@@ -192,12 +139,20 @@ export function evaluate(
   return result.recommendation;
 }
 
-// What still needs enrolling, given what the learner already has.
-//
-// Pass the ids from GET /v2/user/course. Saves firing enrolment calls that
-// would just bounce, which matters on a retake - most of the list will already
-// be there. Also means we never send a duplicate, so it doesnt matter what the
-// endpoint does with one.
+export function toSpecPayload(recommendation: Recommendation): SpecPayload {
+  return {
+    core_path: recommendation.corePath.map((item) => ({
+      course: `C${item.courseNumber}`,
+      reason: item.reason,
+    })),
+    optional_resources: recommendation.optionalResources.map((item) => ({
+      item: item.kind === 'course' ? `C${item.courseNumber}` : item.key,
+      tag: item.tag,
+    })),
+    flags: [...recommendation.flags],
+  };
+}
+
 export function pendingEnrollments(
   recommendation: Recommendation,
   alreadyEnrolledCourseIds: readonly string[],

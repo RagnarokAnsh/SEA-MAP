@@ -1,11 +1,8 @@
-// Builds the engine only. ui/ is meant to be copied into their next app, not
-// shipped from here - it needs react + mantine which we only have as dev deps.
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    // no DOM on purpose - if someone adds a `document.` in src this fails
     "lib": ["ES2022"]
   },
   "include": ["src/**/*"],

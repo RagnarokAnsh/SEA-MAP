@@ -9,6 +9,7 @@ export interface QuestionStepProps {
   index: number;
   total: number;
   draft: Partial<Answers>;
+  selection: string | string[];
   issues: ValidationIssue[];
   onChange: (question: Question, value: string | string[]) => void;
   onOtherRoleTextChange: (text: string) => void;
@@ -19,16 +20,22 @@ export function QuestionStep({
   index,
   total,
   draft,
+  selection,
   issues,
   onChange,
   onOtherRoleTextChange,
 }: QuestionStepProps) {
-  const raw = draft[question.id as keyof Answers];
-  const single = typeof raw === 'string' ? raw : '';
-  const multi = Array.isArray(raw) ? (raw as string[]) : [];
+  const single = typeof selection === 'string' ? selection : '';
+  const multi = Array.isArray(selection) ? selection : [];
+
+  const cappedOptions = question.options.filter((o) => !o.outsideSelectionLimit);
+  const uncappedOptions = question.options.filter((o) => o.outsideSelectionLimit);
 
   const cap = question.maxSelections;
-  const atCap = question.type === 'multi' && cap !== null && multi.length >= cap;
+  const cappedCount = multi.filter((id) =>
+    cappedOptions.some((o) => o.id === id),
+  ).length;
+  const atCap = question.type === 'multi' && cap !== null && cappedCount >= cap;
   const showOtherText = question.id === 'audience' && single === 'other';
 
   return (
@@ -52,7 +59,7 @@ export function QuestionStep({
           className="self-assessment__question-counter"
           data-at-cap={atCap || undefined}
         >
-          {multi.length} of {cap} selected
+          {cappedCount} of {cap} selected
         </Text>
       )}
 
@@ -74,7 +81,7 @@ export function QuestionStep({
       ) : (
         <Checkbox.Group value={multi} onChange={(value) => onChange(question, value)}>
           <Stack gap="xs" className="self-assessment__options">
-            {question.options.map((option) => {
+            {cappedOptions.map((option) => {
               const checked = multi.includes(option.id);
               return (
                 <Checkbox
@@ -82,8 +89,6 @@ export function QuestionStep({
                   value={option.id}
                   label={option.label}
                   description={option.hint}
-                  // grey out the rest once they hit the limit rather than
-                  // letting them pick and then rejecting it
                   disabled={atCap && !checked}
                   className="self-assessment__option"
                   data-selected={checked || undefined}
@@ -91,6 +96,21 @@ export function QuestionStep({
               );
             })}
           </Stack>
+
+          {uncappedOptions.length > 0 && (
+            <Stack gap="xs" className="self-assessment__options self-assessment__options--uncapped">
+              {uncappedOptions.map((option) => (
+                <Checkbox
+                  key={option.id}
+                  value={option.id}
+                  label={option.label}
+                  description={option.hint}
+                  className="self-assessment__option"
+                  data-selected={multi.includes(option.id) || undefined}
+                />
+              ))}
+            </Stack>
+          )}
         </Checkbox.Group>
       )}
 

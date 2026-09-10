@@ -1,11 +1,3 @@
-// Styles for the self assessment quiz.
-// Everything is driven off mantine tokens + the site font vars so it picks up
-// whatever the theme is instead of hardcoding hexes.
-//
-// NOTE: the site loads Reddit Sans, Reddit Sans Condensed and Catamaran.  so
-// I've guessed condensed for headings - if the designs say Catamaran just
-// change --sa-font-heading below, everything else follows.
-
 .self-assessment {
   --sa-font-heading: var(--font-reddit-sans-condensed, var(--mantine-font-family-headings));
   --sa-font-body: var(--font-reddit-sans, var(--mantine-font-family));
@@ -13,6 +5,8 @@
   --sa-border: var(--mantine-color-gray-3);
   --sa-border-hover: var(--mantine-color-gray-5);
   --sa-border-active: var(--mantine-primary-color-filled);
+  --sa-surface: var(--mantine-color-body);
+  --sa-surface-soft: var(--mantine-color-gray-0);
   --sa-surface-active: var(--mantine-primary-color-light);
   --sa-muted: var(--mantine-color-dimmed);
   --sa-radius: var(--mantine-radius-md);
@@ -27,7 +21,9 @@
     font-family: var(--sa-font-heading);
   }
 
-  // --- intro ---
+  &--result {
+    max-width: 64rem;
+  }
 
   &__intro {
     text-align: center;
@@ -59,8 +55,6 @@
   &__cta {
     margin-top: var(--mantine-spacing-sm);
   }
-
-  // --- questions ---
 
   &__progress {
     margin-bottom: var(--mantine-spacing-xl);
@@ -98,16 +92,19 @@
     margin: calc(var(--mantine-spacing-lg) * -1 + var(--mantine-spacing-xs)) 0
       var(--mantine-spacing-md);
 
-    // nudge them when they've used both picks
     &[data-at-cap] {
       color: var(--mantine-primary-color-filled);
       font-weight: 600;
     }
   }
 
-  // --- options ---
-  // each radio/checkbox is a clickable card. mantine puts its own class on the
-  // root, we just add ours on top.
+  &__options {
+    &--uncapped {
+      margin-top: var(--mantine-spacing-md);
+      padding-top: var(--mantine-spacing-md);
+      border-top: 1px dashed var(--sa-border);
+    }
+  }
 
   &__option {
     border: 1px solid var(--sa-border);
@@ -117,7 +114,6 @@
       border-color 120ms ease,
       background-color 120ms ease;
 
-    // make the whole card the hit target, not just the little circle
     label {
       cursor: pointer;
       width: 100%;
@@ -125,7 +121,7 @@
 
     &:hover:not([data-disabled]) {
       border-color: var(--sa-border-hover);
-      background-color: var(--mantine-color-gray-0);
+      background-color: var(--sa-surface-soft);
     }
 
     &[data-selected] {
@@ -133,7 +129,6 @@
       background-color: var(--sa-surface-active);
     }
 
-    // greyed out once they hit the 2 pick limit
     &[data-disabled],
     &:has(input:disabled) {
       opacity: 0.45;
@@ -163,161 +158,244 @@
     border-top: 1px solid var(--sa-border);
   }
 
-  // Next stays clickable when the question isnt done, it just looks quieter.
-  // Clicking it shows them what's missing, which is nicer than a dead button.
   &__next[data-incomplete] {
     opacity: 0.55;
   }
 
-  // --- results ---
-
   &__result-title {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
     line-height: 1.15;
-    margin: 0 0 var(--mantine-spacing-sm);
+    margin: 0 0 var(--mantine-spacing-xs);
   }
 
   &__result-intro {
     color: var(--sa-muted);
     line-height: 1.6;
-    margin: 0 0 var(--mantine-spacing-lg);
+    max-width: 52rem;
+    margin: 0 0 var(--mantine-spacing-xl);
   }
 
-  &__notice {
-    margin-bottom: var(--mantine-spacing-md);
-  }
-
-  &__section {
-    margin-top: var(--mantine-spacing-xl);
-  }
-
-  &__section-title {
-    font-size: 1.25rem;
-    margin: 0 0 var(--mantine-spacing-xs);
-  }
-
-  &__section-description {
-    color: var(--sa-muted);
-    font-size: var(--mantine-font-size-sm);
-    margin: 0 0 var(--mantine-spacing-md);
-  }
-
-  &__course-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--mantine-spacing-sm);
-  }
-
-  &__course {
-    border: 1px solid var(--sa-border);
-    border-radius: var(--sa-radius);
-    padding: var(--mantine-spacing-md);
+  &__path {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+    align-items: stretch;
+    gap: var(--mantine-spacing-sm) 0;
 
-    &:hover {
-      border-color: var(--sa-border-hover);
+    &[data-single] .self-assessment__path-step {
+      flex: 0 1 22rem;
     }
   }
 
-  &__course-link {
-    text-decoration: none;
-    color: inherit;
+  &__path-step {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 15rem;
+    min-width: 0;
+  }
+
+  &__path-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding-inline: var(--mantine-spacing-sm);
+    color: var(--mantine-color-gray-6);
+  }
+
+  &__card {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    background-color: var(--sa-surface);
+    border: 1px solid var(--sa-border);
+    border-radius: var(--sa-radius);
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease;
+
+    &:hover {
+      border-color: var(--sa-border-hover);
+      box-shadow: 0 1px 3px rgb(0 0 0 / 6%);
+    }
+
+    &[data-anchor] {
+      background-color: var(--sa-surface-soft);
+    }
+  }
+
+  &__card-link {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    flex: 1 1 16rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 6px;
+    padding: var(--mantine-spacing-md);
+    text-decoration: none;
+    color: inherit;
 
-    &:hover &-title,
-    &:hover .self-assessment__course-title {
+    &:hover .self-assessment__card-number {
       text-decoration: underline;
     }
   }
 
-  &__course-number {
+  &__card-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--sa-font-heading);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-size: var(--mantine-font-size-xs);
     font-weight: 600;
-    color: var(--mantine-primary-color-filled);
+    color: var(--mantine-color-gray-7);
+
+    &[data-anchor] {
+      color: var(--mantine-primary-color-filled);
+    }
   }
 
-  &__course-title {
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  &__course-badge {
+  &__card-icon {
     flex: 0 0 auto;
   }
 
-  &__resource-description {
-    color: var(--sa-muted);
-    font-size: var(--mantine-font-size-sm);
-    margin: 4px 0 0;
-    flex-basis: 100%;
+  &__card-number {
+    font-family: var(--sa-font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: 2px;
   }
 
-  // downloads under the ToT materials - pdfs, videos, manuals
-  &__asset-list {
+  &__card-topic {
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  &__card-rationale {
+    color: var(--sa-muted);
+    font-size: var(--mantine-font-size-sm);
+    line-height: 1.45;
+    margin-top: 2px;
+  }
+
+  &__optional {
+    margin-top: var(--mantine-spacing-xl);
+    padding-top: var(--mantine-spacing-xl);
+    border-top: 1px solid var(--sa-border);
+  }
+
+  &__optional-title {
+    font-size: 1.125rem;
+    margin: 0 0 4px;
+  }
+
+  &__optional-subtitle {
+    color: var(--sa-muted);
+    font-size: var(--mantine-font-size-sm);
+    margin: 0 0 var(--mantine-spacing-lg);
+  }
+
+  &__optional-list {
     list-style: none;
-    margin: var(--mantine-spacing-sm) 0 0;
+    margin: 0;
     padding: 0;
-    flex-basis: 100%;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--mantine-spacing-lg);
   }
 
-  &__asset {
+  &__optional-row {
     display: flex;
-    align-items: baseline;
-    gap: var(--mantine-spacing-xs);
-    font-size: var(--mantine-font-size-sm);
-  }
-
-  &__asset-type {
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: var(--mantine-font-size-xs);
-    color: var(--sa-muted);
-    border: 1px solid var(--sa-border);
-    border-radius: var(--mantine-radius-sm);
-    padding: 0 6px;
-  }
-
-  &__empty {
-    display: flex;
-    flex-direction: column;
     align-items: flex-start;
+    justify-content: space-between;
     gap: var(--mantine-spacing-md);
-    border: 1px dashed var(--sa-border);
-    border-radius: var(--sa-radius);
-    padding: var(--mantine-spacing-lg);
   }
 
-  // retake on the left, open training on the right, like the pdf mockup
+  &__optional-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__optional-heading {
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  &__optional-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__optional-detail {
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  &__optional-rationale {
+    color: var(--sa-muted);
+    font-size: var(--mantine-font-size-sm);
+    line-height: 1.45;
+  }
+
+  &__pill {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    border: 1px solid var(--sa-border);
+    padding: 4px 12px;
+    font-size: var(--mantine-font-size-xs);
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--mantine-color-gray-7);
+    background-color: var(--sa-surface);
+
+    &[data-tag="refresher"] {
+      border-color: transparent;
+      background-color: var(--sa-surface-active);
+      color: var(--mantine-primary-color-filled);
+      font-weight: 600;
+    }
+  }
+
+  &__result-footer {
+    margin: var(--mantine-spacing-xl) 0 0;
+    font-size: var(--mantine-font-size-sm);
+    font-style: italic;
+    color: var(--sa-muted);
+    line-height: 1.5;
+  }
+
   &__result-actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--mantine-spacing-sm);
-    margin-top: var(--mantine-spacing-xl);
-    padding-top: var(--mantine-spacing-lg);
-    border-top: 1px solid var(--sa-border);
-
-    .mantine-Button-root {
-      flex: 1 1 12rem;
-    }
+    margin-top: var(--mantine-spacing-lg);
   }
 }
 
-// phones - stack the nav buttons full width, they're easier to hit
+@media (max-width: 48rem) {
+  .self-assessment__path-step {
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .self-assessment__path[data-single] .self-assessment__path-step {
+    flex: 1 1 100%;
+  }
+
+  .self-assessment__path-arrow {
+    padding: 4px 0;
+    transform: rotate(90deg);
+    align-self: center;
+  }
+}
+
 @media (max-width: 36rem) {
   .self-assessment {
     padding: var(--mantine-spacing-lg) var(--mantine-spacing-sm);
@@ -329,6 +407,12 @@
       .mantine-Button-root {
         width: 100%;
       }
+    }
+
+    &__optional-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--mantine-spacing-xs);
     }
   }
 }

@@ -1,20 +1,13 @@
-// SEA-MaP self assessment -> course recommendation.
-// No runtime deps, so this imports fine from a next client component, a route
-// handler, a nest service, whatever.
-//
-//   const result = evaluate(answers);
-//   for (const id of result.enroll.courseIds) await api.enrollCourse({ course: id });
-//
-// The quiz ui lives in ../ui - it's kept separate so this stays framework free.
-
-export { evaluate, safeEvaluate, pendingEnrollments } from './evaluate.js';
+export { evaluate, safeEvaluate, toSpecPayload, pendingEnrollments } from './evaluate.js';
 export { validateAnswers, AssessmentValidationError } from './validate.js';
 
 export { QUESTIONS, RESULT_COPY, getQuestion } from './questions.js';
 export {
   ALL_COURSE_NUMBERS,
   COURSES,
+  RESOURCES,
   DEFAULT_CATALOG,
+  DEFAULT_RESOURCES,
   buildCatalog,
   catalogFromApiCourses,
   getCourse,
@@ -25,37 +18,45 @@ export {
   AUDIENCE_RULES,
   APPLICATION_RULES,
   CHALLENGE_RULES,
-  INTEREST_RULES,
+  CONFIDENCE_RULES,
   EXPERIENCE_RULES,
-  PRIOR_TRAINING_RULES,
-  DELIVER_TRAINING_FULL_SET,
+  TRAINING_APPLICATION_RESOURCE,
+  OPTIONAL_TAG_PRECEDENCE,
   FOUNDATION_COURSE,
+  MAX_CORE_PATH_LENGTH,
 } from './rules.js';
-export type { AudienceRule, ApplicationRule, Course1Placement } from './rules.js';
+export type { AudienceRule, ApplicationRule, ChallengeRule } from './rules.js';
 
 export type {
   Answers,
   ApplicationId,
   AudienceId,
   ChallengeId,
+  ConfidenceId,
+  CoreReason,
+  CorePathItem,
   CourseCatalog,
   CourseNumber,
   CourseRef,
   EngineConfig,
   EvaluateResult,
   ExperienceId,
-  InterestId,
-  Notice,
-  NoticeCode,
-  PriorTrainingId,
+  OptionalCourse,
+  OptionalItem,
+  OptionalResource,
+  OptionalTag,
   Question,
   QuestionId,
   QuestionOption,
   Recommendation,
-  RecommendedCourse,
-  SupplementaryAsset,
-  SupplementaryAssetType,
-  SupplementaryResource,
+  RecommendationFlag,
+  ResourceAsset,
+  ResourceAssetType,
+  ResourceCatalog,
+  ResourceKey,
+  ResourceRef,
+  SpecPayload,
+  TrainingApplicationId,
   ValidationCode,
   ValidationIssue,
 } from './types.js';

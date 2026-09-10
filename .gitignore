@@ -8,3 +8,6 @@ dist/
 
 # Packaged source archive (redundant with the tracked sources)
 SEA-MAP.zip
+
+# Generated layout-state preview (npm run states)
+examples/layout-states.html

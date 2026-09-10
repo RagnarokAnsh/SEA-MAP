@@ -23,7 +23,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "demo": "tsx examples/demo.ts",
-    "preview": "vite"
+    "preview": "vite",
+    "states": "tsx preview/states.tsx"
   },
   "keywords": [
     "sea-map",

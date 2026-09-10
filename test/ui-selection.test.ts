@@ -1,40 +1,84 @@
 import { describe, expect, it } from 'vitest';
 
 import { getQuestion } from '../src/questions.js';
+import type { Answers } from '../src/types.js';
 import { validateAnswers } from '../src/validate.js';
-import { applyExclusive } from '../ui/useAssessment.js';
+import { applyExclusive, splitApplicationSelection } from '../ui/useAssessment.js';
 
-// The quiz ui has to stop the learner building an answer the engine would
-// reject. Q6 is the only question with an exclusive option so far.
-describe('Q6 exclusive option handling in the ui', () => {
-  const q6 = getQuestion('priorTraining');
+const BASE: Omit<Answers, 'confidence' | 'application' | 'deliverTraining'> = {
+  audience: 'private_sector',
+  challenge: 'operate_waste_systems',
+  experience: 'some_experience',
+};
 
-  it('ticking "none" clears everything else', () => {
-    expect(applyExclusive(q6, ['waste_3rs'], ['waste_3rs', 'none'])).toEqual(['none']);
+describe('exclusive option handling', () => {
+  const confidence = getQuestion('confidence');
+
+  it('ticking none clears everything else', () => {
+    expect(applyExclusive(confidence, ['waste_3rs'], ['waste_3rs', 'none'])).toEqual([
+      'none',
+    ]);
   });
 
-  it('ticking something else drops "none"', () => {
-    expect(applyExclusive(q6, ['none'], ['none', 'policy_epr'])).toEqual(['policy_epr']);
+  it('ticking something else drops none', () => {
+    expect(
+      applyExclusive(confidence, ['none'], ['none', 'policy_business_instruments']),
+    ).toEqual(['policy_business_instruments']);
   });
 
   it('leaves normal combinations alone', () => {
-    const picked = ['waste_3rs', 'policy_epr'];
-    expect(applyExclusive(q6, ['waste_3rs'], picked)).toEqual(picked);
+    const picked = ['waste_3rs', 'policy_business_instruments'];
+    expect(applyExclusive(confidence, ['waste_3rs'], picked)).toEqual(picked);
   });
 
-  it('is a no-op on questions with no exclusive option', () => {
-    const q3 = getQuestion('challenges');
-    const picked = ['circular_economy', 'policy_advocacy'];
-    expect(applyExclusive(q3, ['circular_economy'], picked)).toEqual(picked);
+  it('is a no-op on a question with no exclusive option', () => {
+    const application = getQuestion('application');
+    const picked = ['improve_collection_systems', 'design_behaviour_change'];
+    expect(applyExclusive(application, ['improve_collection_systems'], picked)).toEqual(
+      picked,
+    );
   });
 
-  it('whatever it returns actually passes validation', () => {
-    const result = applyExclusive(q6, ['waste_3rs'], ['waste_3rs', 'none']);
-    const issues = validateAnswers({
-      audience: 'private_sector',
-      experience: 'beginner',
-      priorTraining: result as never,
+  it('produces something the engine accepts', () => {
+    const result = applyExclusive(confidence, ['waste_3rs'], ['waste_3rs', 'none']);
+    expect(validateAnswers({ ...BASE, confidence: result as never })).toEqual([]);
+  });
+});
+
+describe('application selection splitting', () => {
+  it('separates the training option from the capped selections', () => {
+    expect(
+      splitApplicationSelection([
+        'improve_collection_systems',
+        'deliver_training',
+        'design_behaviour_change',
+      ]),
+    ).toEqual({
+      application: ['improve_collection_systems', 'design_behaviour_change'],
+      deliverTraining: true,
     });
-    expect(issues).toEqual([]);
+  });
+
+  it('reports no training when the option is absent', () => {
+    expect(splitApplicationSelection(['improve_collection_systems'])).toEqual({
+      application: ['improve_collection_systems'],
+      deliverTraining: false,
+    });
+  });
+
+  it('handles the training option on its own', () => {
+    expect(splitApplicationSelection(['deliver_training'])).toEqual({
+      application: [],
+      deliverTraining: true,
+    });
+  });
+
+  it('keeps two capped selections valid alongside the training option', () => {
+    const split = splitApplicationSelection([
+      'improve_collection_systems',
+      'design_behaviour_change',
+      'deliver_training',
+    ]);
+    expect(validateAnswers({ ...BASE, ...split })).toEqual([]);
   });
 });

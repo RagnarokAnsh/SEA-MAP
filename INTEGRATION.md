@@ -11,7 +11,7 @@ src/       the rules engine - plain TypeScript, no dependencies at all
 ui/        the quiz screens - React + Mantine + one SCSS file
 examples/  a ready-made page component and some sample output
 preview/   a runnable copy of the page so you can see it before wiring it up
-test/      117 tests
+test/      64 tests
 ```
 
 You need `src/` and `ui/`. Everything else is reference.
@@ -55,60 +55,39 @@ files, nothing to do. If not, `npm i -D sass` and Next picks it up automatically
 `/training?login=required` — and the "Begin Self-Assessment" CTA on `/training` already points at
 it. This is just filling in what sits behind it.
 
+A complete version is in [`examples/nextjs-page.tsx`](examples/nextjs-page.tsx). The essentials:
+
 ```tsx
 'use client';
 
-import { useCallback } from 'react';
-
-import { SelfAssessment } from '@/features/self-assessment/ui';
-import '@/features/self-assessment/ui/self-assessment.scss';
-import {
-  catalogFromApiCourses,
-  evaluate,
-  pendingEnrollments,
-  type Answers,
-  type Recommendation,
-} from '@/features/self-assessment/engine';
-import api from '@/services/api';
+import { catalogFromApiCourses, evaluate, pendingEnrollments } from '../engine/index.js';
+import { SelfAssessment } from '../ui/index.js';
 
 export default function SelfAssessmentPage() {
-  const handleSubmit = useCallback(async (answers: Answers): Promise<Recommendation> => {
-    // Rebind the catalog to this environment's course ids. Matches on slug,
-    // which doesn't change between staging and prod.
+  const handleSubmit = async (answers: Answers): Promise<Recommendation> => {
     const { data } = await api.getCourses();
     const recommendation = evaluate(answers, {
       catalog: catalogFromApiCourses(data?.data ?? data ?? []),
     });
 
-    // Skip whatever they're already enrolled in - matters on a retake.
     const mine = await api.getUserCourses();
-    const enrolled = (mine?.data?.data ?? mine?.data ?? [])
-      .map((entry: any) => entry?.course?._id)
-      .filter(Boolean);
+    const pending = pendingEnrollments(recommendation, extractEnrolledIds(mine));
 
-    const pending = pendingEnrollments(recommendation, enrolled);
-
-    // One at a time. Promise.all just hammers the api and makes partial
-    // failures harder to report.
     for (const courseId of pending.courseIds) {
-      try {
-        await api.enrollCourse({ course: courseId });
-      } catch {
-        console.error('[self-assessment] enrol failed for', courseId);
-      }
+      await api.enrollCourse({ course: courseId });
     }
 
-    // Refresh the store so /training shows the new enrolments.
     await api.getUserCourses();
-
     return recommendation;
-  }, []);
+  };
 
   return <SelfAssessment onSubmit={handleSubmit} />;
 }
 ```
 
-A fuller version with comments is in [`examples/nextjs-page.tsx`](examples/nextjs-page.tsx).
+Enrol one at a time rather than with `Promise.all` — parallel calls hammer the API and make
+partial failures harder to report. Don't throw when an enrolment fails: the learner has done the
+quiz, so show them the result and let them enrol from the course cards.
 
 ### ⚠️ Check the enrollCourse payload
 
@@ -127,79 +106,82 @@ After enrolling, the existing `setUserCourses` / `upsertUserCourse` actions need
 
 ## Step 5 — check it
 
-Go to `/training`, click "Begin Self-Assessment", answer the six questions. You should land on the
-results screen, and the new courses should show on `/training`.
+Go to `/training`, click "Begin Self-Assessment", answer the five questions. You should land on
+the results screen, and the core-path courses should show on `/training`.
 
-These three cover the interesting paths:
+These cover the layout states the design has to handle. `npm run demo` prints all of them.
 
 | Answers | Expect |
 |---|---|
-| Q1 *Private sector*, Q2 *Design, plan or implement…*, Q5 *Advanced* | Courses 2, 3, 5 |
-| Q1 *Training facilitator / ToT partner* | All seven, plus an "Also included" block |
-| Q1 *Other*, Q5 *Expert*, Q3 *Understanding the scale…*, Q4 *Understanding the scope…* | Empty state with "Browse all courses" |
+| Q1 *Other*, Q3 *Uncertainty about technologies*, Q4 *Experienced* | One card, no optional section |
+| Q1 *National government*, Q3 *Waste systems difficult to operate*, Q4 *Experienced* | One card, two "Relevant to your role" rows |
+| Q1 *NGO*, Q3 *Waste systems*, Q2 *Decide between recycling technologies* | Two cards joined by an arrow, two role rows |
+| Q1 *National government*, Q3 *Fragmented responsibilities*, Q4 *New to the field*, Q2 two selections, training option ticked | Four cards, one "Resource" row |
+| Q3 *Uncertainty about technologies* **and** Q5 *Recycling technologies* | One card with the contradiction rationale, no badge |
+
+That last one is the case worth looking at closely. The anchor must not look downgraded — no
+badge, no tag, just the longer rationale sentence.
 
 ---
 
 ## Things to set before going live
 
-### The ToT facilitation materials
+### The companion resources
 
-Trainers get a downloads block on the results screen. It's empty until you point it at the real
-files:
+Two named items can appear in the optional tier — the **Waste Picker Training Toolkit** and the
+**Training of Trainers (ToT) Manual**. Neither is a course. Neither is ever enrolled into. Both
+ship with empty asset lists until you point them at the real files:
 
 ```ts
-import { DEFAULT_CONFIG } from '@/features/self-assessment/engine';
+import { DEFAULT_RESOURCES } from '@/features/self-assessment/engine';
 
 evaluate(answers, {
   catalog,
-  totMaterials: {
-    ...DEFAULT_CONFIG.totMaterials,
-    assets: [
-      { type: 'pdf',    title: 'Facilitator handbook',       url: '/files/handbook.pdf' },
-      { type: 'video',  title: 'Running your first session', url: '/files/intro.mp4' },
-      { type: 'manual', title: 'Workshop activity manual',   url: '/files/manual.pdf' },
-    ],
+  resources: {
+    ...DEFAULT_RESOURCES,
+    waste_picker_toolkit: {
+      ...DEFAULT_RESOURCES.waste_picker_toolkit,
+      assets: [{ type: 'pdf', title: 'Waste picker toolkit', url: '/files/toolkit.pdf' }],
+    },
+    tot_manual: {
+      ...DEFAULT_RESOURCES.tot_manual,
+      assets: [{ type: 'manual', title: 'ToT manual', url: '/files/tot-manual.pdf' }],
+    },
   },
 });
 ```
 
-Types are `'pdf' | 'video' | 'manual' | 'link'`. These are downloads — never pass them to the
-enrolment endpoint.
+Asset types are `'pdf' | 'video' | 'manual' | 'link'`. These are downloads — never pass them to
+the enrolment endpoint.
 
-### Confirm the course numbering
+### Course titles do not match the course records
 
-The assessment pdf refers to "Course 1" through "Course 7" and **never names them**. The mapping
-in `engine/courses.ts` was worked out by matching subject matter:
+Titles come from Appendix A of the specification, which states that every card and list row must
+show the official title and never a paraphrase. Four of them differ from what the platform's own
+course records currently hold:
 
-| pdf | Course |
-|---|---|
-| Course 1 | Foundations of Plastics and Plastic Waste Management |
-| Course 2 | Circular Economy Approaches for Plastic Waste Management |
-| Course 3 | Applied 3Rs in Plastic Waste Management |
-| Course 4 | Community Engagement, Behaviour Change, and Informal Sector Inclusion |
-| Course 5 | Business Engagement and Decision-Making Tools: EPR, LCA and GPP |
-| Course 6 | Technology, Innovation, Data, and Monitoring |
-| Course 7 | Inclusive Policy, Governance, and Gender-Responsive Implementation |
+| | Appendix A (what the UI shows) | Current course record |
+|---|---|---|
+| Course 1 | Foundations of Plastic Waste Management | Foundations of **Plastics and** Plastic Waste Management |
+| Course 4 | **Behaviour Change, Community Engagement, & Inclusion of the Informal Sector** | Community Engagement, Behaviour Change, and Informal Sector Inclusion |
+| Course 5 | Business Engagement and Decision-Making Tools for Plastic Waste Management | …same, **plus ": EPR, LCA and GPP"** |
+| Course 6 | Technology **and** Innovation in Plastic Waste Management | Technology, Innovation, **Data, and Monitoring** for… |
 
-All seven line up cleanly, but it's inference rather than something the document states. Worth two
-minutes from someone who knows the course content — getting one wrong means enrolling people into
-the wrong course without anyone noticing. Corrections are a one-line change in
-`engine/courses.ts`.
+Courses 2, 3 and 7 match.
 
-### Where "Open training" goes
+**Slugs are unchanged and must stay unchanged** — they are live URLs. Course 1 is still served at
+`/training/foundations-of-plastics-and-plastic-waste-management`. `catalogFromApiCourses()`
+therefore binds only ids and slugs from `GET /v2/course` and leaves titles alone, so the live
+catalogue can carry a different title without the results page contradicting the specification.
 
-The results screen ends with **Retake assessment** / **Open training**, matching the mockup on
-pages 5 and 10 of the pdf. The mockup doesn't say what "Open training" opens, so it defaults to
-the first course in the Main path. To send them to the catalogue instead:
-
-```tsx
-<SelfAssessment onSubmit={handleSubmit} openTrainingHref="/training" />
-```
+Someone on the client side should decide whether the course records themselves get renamed. Until
+that happens, the results page and the course page will show slightly different titles for four
+courses.
 
 ### Retakes
 
 The results screen has a "Retake assessment" button. Enrolment **only ever grows** — if a retake
-produces a shorter list, courses that dropped off stay enrolled. Un-enrolling could wipe real
+produces a shorter core path, courses that dropped off stay enrolled. Un-enrolling could wipe real
 progress if someone is midway through a course a changed answer just knocked off.
 
 ---
@@ -211,9 +193,6 @@ frontend deploy. The engine is the same module either way; it has no framework i
 
 ```ts
 // src/user/learning-path-assessment.controller.ts
-//
-// NOTE: not /v2/user/course/:id/self-assessment - that name is already taken
-// by the per-course assessment, which is a different feature.
 @Controller('v2/user/learning-path-assessment')
 @UseGuards(AuthGuard)
 export class LearningPathAssessmentController {
@@ -242,21 +221,35 @@ export class LearningPathAssessmentController {
 }
 ```
 
+Note the route name: not `/v2/user/course/:id/self-assessment`, which is already taken by the
+per-course assessment — a different feature.
+
 Store the `answers` **and** the `recommendation`. If a rule changes later, old submissions can be
 re-run against the new rules without asking anyone to retake anything.
+
+If you would rather return the specification's own wire shape than the engine's objects, wrap the
+result in `toSpecPayload()`:
+
+```ts
+return toSpecPayload(recommendation);
+// { core_path: [...], optional_resources: [...], flags: [...] }
+```
 
 The frontend barely changes — `handleSubmit` posts to this endpoint instead of calling
 `evaluate()` locally.
 
 ---
 
-## Two things to watch
+## Three things to watch
 
-**Only render notices with `audience: 'learner'`.** `ResultPanel` already filters on this. The
-`internal` ones are for logs, not for the person taking the quiz.
+**The training/facilitation option is not part of the two-selection cap.** It travels on
+`answers.deliverTraining` as a boolean, not inside `answers.application`. If you build your own
+form rather than using `ui/`, use `splitApplicationSelection()` to separate them — passing
+`deliver_training` inside the array is rejected as an unknown option.
 
-**The worked example on page 7 of the pdf is wrong.** It says a Private Sector professional who
-picks "Design, plan, or implement…" gets Courses 2 and 3. But the Q1 table on page 6 gives Private
-Sector **Courses 2 and 5**, so the answer is **2, 3 and 5**. The engine follows the tables and
-there's a test pinned to it — so if anyone reviews against that example, it will look like a bug
-when it isn't. Worth correcting in the document.
+**Only the core path is enrolled.** Optional items are links the learner chooses to follow.
+Auto-enrolling them would put back the over-recommendation this logic was written to remove.
+
+**The contradiction flag changes copy, never courses.** When `flags` contains
+`challenge_confidence_contradiction`, the anchor card swaps its rationale sentence and nothing
+else. It must not render as a badge and the card must not look skippable.

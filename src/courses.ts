@@ -1,27 +1,21 @@
-import type { CourseCatalog, CourseNumber, CourseRef } from './types.js';
+import type {
+  CourseCatalog,
+  CourseNumber,
+  CourseRef,
+  ResourceCatalog,
+  ResourceRef,
+} from './types.js';
 
 export const ALL_COURSE_NUMBERS: readonly CourseNumber[] = Object.freeze([
   1, 2, 3, 4, 5, 6, 7,
 ] as const);
 
-// The seven RTP courses, pulled from GET /v2/course on staging.
-//
-// Two things worth knowing:
-//
-//  - These are STAGING ids. Production will be different, so bind the catalog
-//    to the live api with catalogFromApiCourses() instead of trusting them.
-//
-//  - The assessment pdf only ever says "Course 1".."Course 7" - it never names
-//    them. The numbering below was worked out by matching subject matter
-//    (Course 2 = circular economy, Course 3 = 3Rs, and so on). All seven line
-//    up cleanly, but it is worth someone who knows the course content casting
-//    an eye over it. Fixing one is a one-line change here.
 export const COURSES: readonly CourseRef[] = Object.freeze([
   {
     courseNumber: 1,
     courseId: '6a2b9e4ba25735cfcfe1f269',
     slug: 'foundations-of-plastics-and-plastic-waste-management',
-    title: 'Foundations of Plastics and Plastic Waste Management',
+    title: 'Foundations of Plastic Waste Management',
   },
   {
     courseNumber: 2,
@@ -39,20 +33,19 @@ export const COURSES: readonly CourseRef[] = Object.freeze([
     courseNumber: 4,
     courseId: '6a3b4d7220a71b2b8c651e4b',
     slug: 'community-engagement-behaviour-change-and-informal-sector-inclusion',
-    title: 'Community Engagement, Behaviour Change, and Informal Sector Inclusion',
+    title: 'Behaviour Change, Community Engagement, & Inclusion of the Informal Sector',
   },
   {
     courseNumber: 5,
     courseId: '6a3933d03b7909b39df54f9d',
     slug: 'business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp',
-    title:
-      'Business Engagement and Decision-Making Tools for Plastic Waste Management: EPR, LCA and GPP',
+    title: 'Business Engagement and Decision-Making Tools for Plastic Waste Management',
   },
   {
     courseNumber: 6,
     courseId: '6a3b4fc920a71b2b8c652265',
     slug: 'technology-innovation-data-and-monitoring-for-plastic-waste-management',
-    title: 'Technology, Innovation, Data, and Monitoring for Plastic Waste Management',
+    title: 'Technology and Innovation in Plastic Waste Management',
   },
   {
     courseNumber: 7,
@@ -66,10 +59,25 @@ export const DEFAULT_CATALOG: CourseCatalog = Object.freeze(
   Object.fromEntries(COURSES.map((c) => [c.courseNumber, c])) as CourseCatalog,
 );
 
-// Override ids/slugs/titles for another environment. Anything you leave out
-// keeps whats in COURSES above.
-//
-//   buildCatalog({ byCourseNumber: { 3: { courseId: 'prod-id-here' } } })
+export const RESOURCES: readonly ResourceRef[] = Object.freeze([
+  {
+    key: 'waste_picker_toolkit',
+    title: 'Waste Picker Training Toolkit',
+    description: 'Practical companion material for informal-sector engagement.',
+    assets: [],
+  },
+  {
+    key: 'tot_manual',
+    title: 'Training of Trainers (ToT) Manual',
+    description: 'Facilitation material for delivering the RTP courses to your own learners.',
+    assets: [],
+  },
+] as const satisfies readonly ResourceRef[]);
+
+export const DEFAULT_RESOURCES: ResourceCatalog = Object.freeze(
+  Object.fromEntries(RESOURCES.map((r) => [r.key, r])) as ResourceCatalog,
+);
+
 export function buildCatalog(overrides: {
   byCourseNumber?: Partial<Record<CourseNumber, Partial<Omit<CourseRef, 'courseNumber'>>>>;
   bySlug?: Record<string, Partial<Omit<CourseRef, 'courseNumber'>>>;
@@ -82,22 +90,14 @@ export function buildCatalog(overrides: {
   return Object.fromEntries(entries) as CourseCatalog;
 }
 
-// Bind the catalog to a live GET /v2/course response, matching on slug.
-// Slugs are stable across environments, ids arent - so this is how you make
-// the same build work on staging and prod.
-//
-// Courses missing from the response keep their defaults, so a partial or
-// failed response wont break anything.
 export function catalogFromApiCourses(
-  apiCourses: ReadonlyArray<{ _id?: string; slug?: string; title?: string }>,
+  apiCourses: ReadonlyArray<{ _id?: string; slug?: string }>,
 ): CourseCatalog {
   const bySlug: Record<string, Partial<Omit<CourseRef, 'courseNumber'>>> = {};
   for (const course of apiCourses) {
     if (!course?.slug) continue;
-    const patch: Partial<Omit<CourseRef, 'courseNumber'>> = { slug: course.slug };
-    if (course._id) patch.courseId = course._id;
-    if (course.title) patch.title = course.title;
-    bySlug[course.slug] = patch;
+    if (!course._id) continue;
+    bySlug[course.slug] = { courseId: course._id };
   }
   return buildCatalog({ bySlug });
 }

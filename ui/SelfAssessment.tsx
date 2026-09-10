@@ -2,28 +2,23 @@
 
 import { Alert, Button, Group, Progress, Text, Title } from '@mantine/core';
 
-import type { Answers, Recommendation, RecommendedCourse } from '../src/types.js';
+import type { Answers, Recommendation } from '../src/types.js';
 import { QuestionStep } from './QuestionStep.js';
 import { ResultPanel } from './ResultPanel.js';
 import { useAssessment, type Phase } from './useAssessment.js';
 
-// Same wording as the "Identify Your Learning Path" card already on /training,
-// so this reads as a continuation of the thing they just clicked.
 const INTRO = {
   title: 'Identify Your Learning Path',
   lead: 'Begin with a short self-assessment to reflect on your current knowledge, learning needs, and priority areas. You will then unlock a recommended learning path and be guided toward the courses most relevant to you.',
   detail:
-    'Six questions, about two minutes. There are no right or wrong answers - it just works out which of the seven courses are worth your time.',
+    'Five questions, about two minutes. There are no right or wrong answers - it just works out which of the seven courses are worth your time.',
   button: 'Begin Self-Assessment',
 };
 
 export interface SelfAssessmentProps {
-  // Run evaluate(), do the enrolling, hand back the recommendation.
-  // INTEGRATION.md step 3 has a working version.
   onSubmit: (answers: Answers) => Promise<Recommendation>;
   onRestart?: () => void;
-  courseHref?: (course: RecommendedCourse) => string;
-  openTrainingHref?: string;
+  courseHref?: (item: { slug: string }) => string;
   startAt?: Phase;
 }
 
@@ -31,7 +26,6 @@ export function SelfAssessment({
   onSubmit,
   onRestart,
   courseHref,
-  openTrainingHref,
   startAt,
 }: SelfAssessmentProps) {
   const a = useAssessment({ onSubmit, startAt });
@@ -63,7 +57,6 @@ export function SelfAssessment({
         <ResultPanel
           result={a.result}
           courseHref={courseHref}
-          openTrainingHref={openTrainingHref}
           onRestart={onRestart ?? a.restart}
         />
       </section>
@@ -87,6 +80,7 @@ export function SelfAssessment({
         index={a.index}
         total={a.total}
         draft={a.draft}
+        selection={a.selection}
         issues={a.visibleIssues}
         onChange={a.setSelection}
         onOtherRoleTextChange={a.setOtherRoleText}

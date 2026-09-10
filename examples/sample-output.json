@@ -1,496 +1,460 @@
 {
-  "readMe": "Sample output from `npm run demo`.\n\n\"persona\" and \"note\" label the samples in this file - they are NOT part of\nthe engine response. The contract is the \"recommendation\" object.\n\nCourse ids are staging ids. Rebind per environment with catalogFromApiCourses().",
+  "readMe": "Sample output from `npm run demo`.\n\n\"persona\" and \"note\" label the samples in this file - they are NOT part of\nthe engine response. The contract is the \"recommendation\" object, and\n\"specPayload\" is the same result in the wire shape the specification uses.\n\nCourse ids are staging ids. Rebind per environment with catalogFromApiCourses().",
   "personas": [
     {
-      "persona": "National government policy adviser",
-      "note": "Q1 drives a three-course Main path; Q6 marks the EPR course as a refresher.",
+      "persona": "One core course, nothing optional",
+      "note": "Layout state (a). The challenge alone carries the recommendation.",
       "answers": {
-        "audience": "national_government",
-        "application": [
-          "epr_compliance",
-          "social_inclusion"
-        ],
-        "challenges": [
-          "data_technology_monitoring"
-        ],
-        "interests": [
-          "governance_coordination"
-        ],
-        "experience": "intermediate",
-        "priorTraining": [
-          "policy_epr"
-        ]
+        "audience": "other",
+        "otherRoleText": "Independent consultant",
+        "challenge": "technology_uncertainty",
+        "experience": "experienced"
       },
       "recommendation": {
-        "mainLearningPath": [
-          {
-            "courseNumber": 2,
-            "courseId": "6a3b4a8220a71b2b8c65188d",
-            "slug": "circular-economy-approaches-for-plastic-waste-management",
-            "title": "Circular Economy Approaches for Plastic Waste Management",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 4,
-            "courseId": "6a3b4d7220a71b2b8c651e4b",
-            "slug": "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "title": "Community Engagement, Behaviour Change, and Informal Sector Inclusion",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 5,
-            "courseId": "6a3933d03b7909b39df54f9d",
-            "slug": "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "title": "Business Engagement and Decision-Making Tools for Plastic Waste Management: EPR, LCA and GPP",
-            "isRefresher": true
-          },
-          {
-            "courseNumber": 7,
-            "courseId": "6a3b502c20a71b2b8c652287",
-            "slug": "inclusive-policy-governance-and-gender-responsive-implementation",
-            "title": "Inclusive Policy, Governance, and Gender-Responsive Implementation",
-            "isRefresher": false
-          }
-        ],
-        "additionalRecommendedCourses": [
-          {
-            "courseNumber": 1,
-            "courseId": "6a2b9e4ba25735cfcfe1f269",
-            "slug": "foundations-of-plastics-and-plastic-waste-management",
-            "title": "Foundations of Plastics and Plastic Waste Management",
-            "isRefresher": false
-          },
+        "corePath": [
           {
             "courseNumber": 6,
             "courseId": "6a3b4fc920a71b2b8c652265",
             "slug": "technology-innovation-data-and-monitoring-for-plastic-waste-management",
-            "title": "Technology, Innovation, Data, and Monitoring for Plastic Waste Management",
-            "isRefresher": false
+            "title": "Technology and Innovation in Plastic Waste Management",
+            "reason": "challenge"
           }
         ],
-        "supplementaryResources": [],
+        "optionalResources": [],
+        "flags": [],
         "enroll": {
           "courseNumbers": [
-            2,
-            4,
-            5,
-            7,
-            1,
             6
           ],
           "courseIds": [
-            "6a3b4a8220a71b2b8c65188d",
-            "6a3b4d7220a71b2b8c651e4b",
-            "6a3933d03b7909b39df54f9d",
-            "6a3b502c20a71b2b8c652287",
-            "6a2b9e4ba25735cfcfe1f269",
             "6a3b4fc920a71b2b8c652265"
           ],
           "slugs": [
-            "circular-economy-approaches-for-plastic-waste-management",
-            "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "inclusive-policy-governance-and-gender-responsive-implementation",
-            "foundations-of-plastics-and-plastic-waste-management",
             "technology-innovation-data-and-monitoring-for-plastic-waste-management"
           ]
-        },
-        "notices": []
+        }
+      },
+      "specPayload": {
+        "core_path": [
+          {
+            "course": "C6",
+            "reason": "challenge"
+          }
+        ],
+        "optional_resources": [],
+        "flags": []
       }
     },
     {
-      "persona": "SME product and packaging lead",
-      "note": "Beginner, so Course 1 is added to the Main path as the required entry point.",
+      "persona": "One core course, two role suggestions",
+      "note": "Layout state (b). Audience contributes only to the optional tier.",
       "answers": {
-        "audience": "private_sector",
-        "application": [
-          "product_design",
-          "operational_efficiency"
-        ],
-        "challenges": [
-          "circular_economy"
-        ],
-        "interests": [
-          "practical_waste_reduction"
-        ],
-        "experience": "beginner",
-        "priorTraining": [
-          "none"
-        ]
+        "audience": "national_government",
+        "challenge": "operate_waste_systems",
+        "experience": "experienced"
       },
       "recommendation": {
-        "mainLearningPath": [
-          {
-            "courseNumber": 1,
-            "courseId": "6a2b9e4ba25735cfcfe1f269",
-            "slug": "foundations-of-plastics-and-plastic-waste-management",
-            "title": "Foundations of Plastics and Plastic Waste Management",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 2,
-            "courseId": "6a3b4a8220a71b2b8c65188d",
-            "slug": "circular-economy-approaches-for-plastic-waste-management",
-            "title": "Circular Economy Approaches for Plastic Waste Management",
-            "isRefresher": false
-          },
+        "corePath": [
           {
             "courseNumber": 3,
             "courseId": "6a3b4c4d20a71b2b8c651b4e",
             "slug": "applied-3rs-in-plastic-waste-management",
             "title": "Applied 3Rs in Plastic Waste Management",
-            "isRefresher": false
+            "reason": "challenge"
+          }
+        ],
+        "optionalResources": [
+          {
+            "courseNumber": 7,
+            "courseId": "6a3b502c20a71b2b8c652287",
+            "slug": "inclusive-policy-governance-and-gender-responsive-implementation",
+            "title": "Inclusive Policy, Governance, and Gender-Responsive Implementation",
+            "kind": "course",
+            "tag": "role"
           },
           {
             "courseNumber": 5,
             "courseId": "6a3933d03b7909b39df54f9d",
             "slug": "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "title": "Business Engagement and Decision-Making Tools for Plastic Waste Management: EPR, LCA and GPP",
-            "isRefresher": false
+            "title": "Business Engagement and Decision-Making Tools for Plastic Waste Management",
+            "kind": "course",
+            "tag": "role"
           }
         ],
-        "additionalRecommendedCourses": [],
-        "supplementaryResources": [],
+        "flags": [],
         "enroll": {
           "courseNumbers": [
-            1,
-            2,
-            3,
-            5
+            3
           ],
           "courseIds": [
-            "6a2b9e4ba25735cfcfe1f269",
-            "6a3b4a8220a71b2b8c65188d",
-            "6a3b4c4d20a71b2b8c651b4e",
-            "6a3933d03b7909b39df54f9d"
+            "6a3b4c4d20a71b2b8c651b4e"
           ],
           "slugs": [
-            "foundations-of-plastics-and-plastic-waste-management",
-            "circular-economy-approaches-for-plastic-waste-management",
-            "applied-3rs-in-plastic-waste-management",
-            "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp"
+            "applied-3rs-in-plastic-waste-management"
           ]
-        },
-        "notices": []
+        }
+      },
+      "specPayload": {
+        "core_path": [
+          {
+            "course": "C3",
+            "reason": "challenge"
+          }
+        ],
+        "optional_resources": [
+          {
+            "item": "C7",
+            "tag": "role"
+          },
+          {
+            "item": "C5",
+            "tag": "role"
+          }
+        ],
+        "flags": []
       }
     },
     {
-      "persona": "Community NGO programme officer",
-      "note": "Several answers all point at Course 4; it still only appears once.",
+      "persona": "Two core courses, two role suggestions",
+      "note": "Layout state (c). One application adds a second card to the path.",
       "answers": {
         "audience": "ngo_cso",
+        "challenge": "operate_waste_systems",
+        "experience": "some_experience",
         "application": [
-          "engage_communities",
-          "social_inclusion"
-        ],
-        "challenges": [
-          "community_informal_sector"
-        ],
-        "interests": [
-          "community_behaviour_change"
-        ],
-        "experience": "introductory",
-        "priorTraining": [
-          "community_engagement"
+          "choose_recycling_technology"
         ]
       },
       "recommendation": {
-        "mainLearningPath": [
+        "corePath": [
           {
-            "courseNumber": 1,
-            "courseId": "6a2b9e4ba25735cfcfe1f269",
-            "slug": "foundations-of-plastics-and-plastic-waste-management",
-            "title": "Foundations of Plastics and Plastic Waste Management",
-            "isRefresher": false
+            "courseNumber": 3,
+            "courseId": "6a3b4c4d20a71b2b8c651b4e",
+            "slug": "applied-3rs-in-plastic-waste-management",
+            "title": "Applied 3Rs in Plastic Waste Management",
+            "reason": "challenge"
           },
+          {
+            "courseNumber": 6,
+            "courseId": "6a3b4fc920a71b2b8c652265",
+            "slug": "technology-innovation-data-and-monitoring-for-plastic-waste-management",
+            "title": "Technology and Innovation in Plastic Waste Management",
+            "reason": "application"
+          }
+        ],
+        "optionalResources": [
           {
             "courseNumber": 4,
             "courseId": "6a3b4d7220a71b2b8c651e4b",
             "slug": "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "title": "Community Engagement, Behaviour Change, and Informal Sector Inclusion",
-            "isRefresher": true
+            "title": "Behaviour Change, Community Engagement, & Inclusion of the Informal Sector",
+            "kind": "course",
+            "tag": "role"
           },
           {
             "courseNumber": 7,
             "courseId": "6a3b502c20a71b2b8c652287",
             "slug": "inclusive-policy-governance-and-gender-responsive-implementation",
             "title": "Inclusive Policy, Governance, and Gender-Responsive Implementation",
-            "isRefresher": false
+            "kind": "course",
+            "tag": "role"
           }
         ],
-        "additionalRecommendedCourses": [],
-        "supplementaryResources": [],
+        "flags": [],
         "enroll": {
           "courseNumbers": [
-            1,
-            4,
-            7
+            3,
+            6
           ],
           "courseIds": [
-            "6a2b9e4ba25735cfcfe1f269",
-            "6a3b4d7220a71b2b8c651e4b",
-            "6a3b502c20a71b2b8c652287"
+            "6a3b4c4d20a71b2b8c651b4e",
+            "6a3b4fc920a71b2b8c652265"
           ],
           "slugs": [
-            "foundations-of-plastics-and-plastic-waste-management",
-            "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "inclusive-policy-governance-and-gender-responsive-implementation"
+            "applied-3rs-in-plastic-waste-management",
+            "technology-innovation-data-and-monitoring-for-plastic-waste-management"
           ]
-        },
-        "notices": []
+        }
+      },
+      "specPayload": {
+        "core_path": [
+          {
+            "course": "C3",
+            "reason": "challenge"
+          },
+          {
+            "course": "C6",
+            "reason": "application"
+          }
+        ],
+        "optional_resources": [
+          {
+            "item": "C4",
+            "tag": "role"
+          },
+          {
+            "item": "C7",
+            "tag": "role"
+          }
+        ],
+        "flags": []
       }
     },
     {
-      "persona": "Trainer-of-trainers partner",
-      "note": "All seven courses plus the ToT facilitation materials.",
+      "persona": "Four core courses",
+      "note": "Layout state (d), the longest path the algorithm can produce.",
       "answers": {
-        "audience": "tot_partner",
-        "experience": "advanced",
-        "priorTraining": [
-          "general_environmental"
-        ]
+        "audience": "national_government",
+        "challenge": "coordination_governance",
+        "experience": "new_to_field",
+        "application": [
+          "design_policy_instruments",
+          "improve_collection_systems"
+        ],
+        "deliverTraining": true
       },
       "recommendation": {
-        "mainLearningPath": [
+        "corePath": [
           {
             "courseNumber": 1,
             "courseId": "6a2b9e4ba25735cfcfe1f269",
             "slug": "foundations-of-plastics-and-plastic-waste-management",
-            "title": "Foundations of Plastics and Plastic Waste Management",
-            "isRefresher": true
+            "title": "Foundations of Plastic Waste Management",
+            "reason": "c1_gate"
           },
           {
-            "courseNumber": 2,
-            "courseId": "6a3b4a8220a71b2b8c65188d",
-            "slug": "circular-economy-approaches-for-plastic-waste-management",
-            "title": "Circular Economy Approaches for Plastic Waste Management",
-            "isRefresher": false
+            "courseNumber": 7,
+            "courseId": "6a3b502c20a71b2b8c652287",
+            "slug": "inclusive-policy-governance-and-gender-responsive-implementation",
+            "title": "Inclusive Policy, Governance, and Gender-Responsive Implementation",
+            "reason": "challenge"
+          },
+          {
+            "courseNumber": 5,
+            "courseId": "6a3933d03b7909b39df54f9d",
+            "slug": "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
+            "title": "Business Engagement and Decision-Making Tools for Plastic Waste Management",
+            "reason": "application"
           },
           {
             "courseNumber": 3,
             "courseId": "6a3b4c4d20a71b2b8c651b4e",
             "slug": "applied-3rs-in-plastic-waste-management",
             "title": "Applied 3Rs in Plastic Waste Management",
-            "isRefresher": false
+            "reason": "application"
+          }
+        ],
+        "optionalResources": [
+          {
+            "key": "tot_manual",
+            "title": "Training of Trainers (ToT) Manual",
+            "description": "Facilitation material for delivering the RTP courses to your own learners.",
+            "assets": [],
+            "kind": "resource",
+            "tag": "resource"
+          }
+        ],
+        "flags": [],
+        "enroll": {
+          "courseNumbers": [
+            1,
+            7,
+            5,
+            3
+          ],
+          "courseIds": [
+            "6a2b9e4ba25735cfcfe1f269",
+            "6a3b502c20a71b2b8c652287",
+            "6a3933d03b7909b39df54f9d",
+            "6a3b4c4d20a71b2b8c651b4e"
+          ],
+          "slugs": [
+            "foundations-of-plastics-and-plastic-waste-management",
+            "inclusive-policy-governance-and-gender-responsive-implementation",
+            "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
+            "applied-3rs-in-plastic-waste-management"
+          ]
+        }
+      },
+      "specPayload": {
+        "core_path": [
+          {
+            "course": "C1",
+            "reason": "c1_gate"
           },
           {
-            "courseNumber": 4,
-            "courseId": "6a3b4d7220a71b2b8c651e4b",
-            "slug": "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "title": "Community Engagement, Behaviour Change, and Informal Sector Inclusion",
-            "isRefresher": false
+            "course": "C7",
+            "reason": "challenge"
           },
           {
-            "courseNumber": 5,
-            "courseId": "6a3933d03b7909b39df54f9d",
-            "slug": "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "title": "Business Engagement and Decision-Making Tools for Plastic Waste Management: EPR, LCA and GPP",
-            "isRefresher": false
+            "course": "C5",
+            "reason": "application"
           },
+          {
+            "course": "C3",
+            "reason": "application"
+          }
+        ],
+        "optional_resources": [
+          {
+            "item": "tot_manual",
+            "tag": "resource"
+          }
+        ],
+        "flags": []
+      }
+    },
+    {
+      "persona": "Challenge and confidence on the same topic",
+      "note": "Layout state (e). The anchor stays put and the rationale copy switches.",
+      "answers": {
+        "audience": "waste_practitioner",
+        "challenge": "technology_uncertainty",
+        "experience": "some_experience",
+        "confidence": [
+          "technology_solutions"
+        ]
+      },
+      "recommendation": {
+        "corePath": [
           {
             "courseNumber": 6,
             "courseId": "6a3b4fc920a71b2b8c652265",
             "slug": "technology-innovation-data-and-monitoring-for-plastic-waste-management",
-            "title": "Technology, Innovation, Data, and Monitoring for Plastic Waste Management",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 7,
-            "courseId": "6a3b502c20a71b2b8c652287",
-            "slug": "inclusive-policy-governance-and-gender-responsive-implementation",
-            "title": "Inclusive Policy, Governance, and Gender-Responsive Implementation",
-            "isRefresher": false
+            "title": "Technology and Innovation in Plastic Waste Management",
+            "reason": "challenge"
           }
         ],
-        "additionalRecommendedCourses": [],
-        "supplementaryResources": [
-          {
-            "key": "tot_facilitation_materials",
-            "title": "Trainer-of-Trainers Facilitation Materials",
-            "description": "Facilitation guides, manuals and short videos for running the RTP courses with your own learners.",
-            "assets": []
-          }
-        ],
-        "enroll": {
-          "courseNumbers": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7
-          ],
-          "courseIds": [
-            "6a2b9e4ba25735cfcfe1f269",
-            "6a3b4a8220a71b2b8c65188d",
-            "6a3b4c4d20a71b2b8c651b4e",
-            "6a3b4d7220a71b2b8c651e4b",
-            "6a3933d03b7909b39df54f9d",
-            "6a3b4fc920a71b2b8c652265",
-            "6a3b502c20a71b2b8c652287"
-          ],
-          "slugs": [
-            "foundations-of-plastics-and-plastic-waste-management",
-            "circular-economy-approaches-for-plastic-waste-management",
-            "applied-3rs-in-plastic-waste-management",
-            "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "technology-innovation-data-and-monitoring-for-plastic-waste-management",
-            "inclusive-policy-governance-and-gender-responsive-implementation"
-          ]
-        },
-        "notices": [
-          {
-            "code": "TOT_MATERIALS_INCLUDED",
-            "message": "Your path also includes the trainer-of-trainers facilitation materials. These are sent separately from the courses.",
-            "audience": "learner"
-          }
-        ]
-      }
-    },
-    {
-      "persona": "Local official who also runs training",
-      "note": "Q2 \"deliver training\" grants the full set too, so the Q1 role no longer caps it.",
-      "answers": {
-        "audience": "sub_national_government",
-        "application": [
-          "deliver_training"
-        ],
-        "experience": "intermediate"
-      },
-      "recommendation": {
-        "mainLearningPath": [
-          {
-            "courseNumber": 1,
-            "courseId": "6a2b9e4ba25735cfcfe1f269",
-            "slug": "foundations-of-plastics-and-plastic-waste-management",
-            "title": "Foundations of Plastics and Plastic Waste Management",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 2,
-            "courseId": "6a3b4a8220a71b2b8c65188d",
-            "slug": "circular-economy-approaches-for-plastic-waste-management",
-            "title": "Circular Economy Approaches for Plastic Waste Management",
-            "isRefresher": false
-          },
+        "optionalResources": [
           {
             "courseNumber": 3,
             "courseId": "6a3b4c4d20a71b2b8c651b4e",
             "slug": "applied-3rs-in-plastic-waste-management",
             "title": "Applied 3Rs in Plastic Waste Management",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 4,
-            "courseId": "6a3b4d7220a71b2b8c651e4b",
-            "slug": "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "title": "Community Engagement, Behaviour Change, and Informal Sector Inclusion",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 5,
-            "courseId": "6a3933d03b7909b39df54f9d",
-            "slug": "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "title": "Business Engagement and Decision-Making Tools for Plastic Waste Management: EPR, LCA and GPP",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 6,
-            "courseId": "6a3b4fc920a71b2b8c652265",
-            "slug": "technology-innovation-data-and-monitoring-for-plastic-waste-management",
-            "title": "Technology, Innovation, Data, and Monitoring for Plastic Waste Management",
-            "isRefresher": false
-          },
-          {
-            "courseNumber": 7,
-            "courseId": "6a3b502c20a71b2b8c652287",
-            "slug": "inclusive-policy-governance-and-gender-responsive-implementation",
-            "title": "Inclusive Policy, Governance, and Gender-Responsive Implementation",
-            "isRefresher": false
+            "kind": "course",
+            "tag": "role"
           }
         ],
-        "additionalRecommendedCourses": [],
-        "supplementaryResources": [
-          {
-            "key": "tot_facilitation_materials",
-            "title": "Trainer-of-Trainers Facilitation Materials",
-            "description": "Facilitation guides, manuals and short videos for running the RTP courses with your own learners.",
-            "assets": []
-          }
+        "flags": [
+          "challenge_confidence_contradiction"
         ],
         "enroll": {
           "courseNumbers": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7
+            6
           ],
           "courseIds": [
-            "6a2b9e4ba25735cfcfe1f269",
-            "6a3b4a8220a71b2b8c65188d",
-            "6a3b4c4d20a71b2b8c651b4e",
-            "6a3b4d7220a71b2b8c651e4b",
-            "6a3933d03b7909b39df54f9d",
-            "6a3b4fc920a71b2b8c652265",
-            "6a3b502c20a71b2b8c652287"
+            "6a3b4fc920a71b2b8c652265"
           ],
           "slugs": [
-            "foundations-of-plastics-and-plastic-waste-management",
-            "circular-economy-approaches-for-plastic-waste-management",
-            "applied-3rs-in-plastic-waste-management",
-            "community-engagement-behaviour-change-and-informal-sector-inclusion",
-            "business-engagement-and-decision-making-tools-for-plastic-waste-management-epr-lca-and-gpp",
-            "technology-innovation-data-and-monitoring-for-plastic-waste-management",
-            "inclusive-policy-governance-and-gender-responsive-implementation"
+            "technology-innovation-data-and-monitoring-for-plastic-waste-management"
           ]
-        },
-        "notices": [
+        }
+      },
+      "specPayload": {
+        "core_path": [
           {
-            "code": "TOT_MATERIALS_INCLUDED",
-            "message": "Your path also includes the trainer-of-trainers facilitation materials. These are sent separately from the courses.",
-            "audience": "learner"
+            "course": "C6",
+            "reason": "challenge"
           }
+        ],
+        "optional_resources": [
+          {
+            "item": "C3",
+            "tag": "role"
+          }
+        ],
+        "flags": [
+          "challenge_confidence_contradiction"
         ]
       }
     },
     {
-      "persona": "Unlisted role, no matching topics (edge case)",
-      "note": "\"Other\" contributes nothing and every other answer is a no-op, so the path is empty.",
+      "persona": "All three optional tags at once",
+      "note": "Refresher outranks role, and both companion resources appear.",
       "answers": {
-        "audience": "other",
-        "otherRoleText": "Marine biology researcher",
+        "audience": "community_informal_sector",
+        "challenge": "community_participation",
+        "experience": "some_experience",
         "application": [
-          "professional_development"
+          "engage_informal_sector",
+          "integrate_circular_principles"
         ],
-        "challenges": [
-          "scale_sources_impacts"
+        "confidence": [
+          "circular_economy"
         ],
-        "interests": [
-          "scope_of_plastic_waste"
-        ],
-        "experience": "expert"
+        "deliverTraining": true
       },
       "recommendation": {
-        "mainLearningPath": [],
-        "additionalRecommendedCourses": [],
-        "supplementaryResources": [],
-        "enroll": {
-          "courseNumbers": [],
-          "courseIds": [],
-          "slugs": []
-        },
-        "notices": [
+        "corePath": [
           {
-            "code": "EMPTY_RECOMMENDATION",
-            "message": "Your answers dont point to a specific course. Have a look through the full catalogue and pick whatever fits.",
-            "audience": "learner"
+            "courseNumber": 4,
+            "courseId": "6a3b4d7220a71b2b8c651e4b",
+            "slug": "community-engagement-behaviour-change-and-informal-sector-inclusion",
+            "title": "Behaviour Change, Community Engagement, & Inclusion of the Informal Sector",
+            "reason": "challenge"
           }
-        ]
+        ],
+        "optionalResources": [
+          {
+            "courseNumber": 2,
+            "courseId": "6a3b4a8220a71b2b8c65188d",
+            "slug": "circular-economy-approaches-for-plastic-waste-management",
+            "title": "Circular Economy Approaches for Plastic Waste Management",
+            "kind": "course",
+            "tag": "refresher"
+          },
+          {
+            "key": "waste_picker_toolkit",
+            "title": "Waste Picker Training Toolkit",
+            "description": "Practical companion material for informal-sector engagement.",
+            "assets": [],
+            "kind": "resource",
+            "tag": "resource"
+          },
+          {
+            "key": "tot_manual",
+            "title": "Training of Trainers (ToT) Manual",
+            "description": "Facilitation material for delivering the RTP courses to your own learners.",
+            "assets": [],
+            "kind": "resource",
+            "tag": "resource"
+          }
+        ],
+        "flags": [],
+        "enroll": {
+          "courseNumbers": [
+            4
+          ],
+          "courseIds": [
+            "6a3b4d7220a71b2b8c651e4b"
+          ],
+          "slugs": [
+            "community-engagement-behaviour-change-and-informal-sector-inclusion"
+          ]
+        }
+      },
+      "specPayload": {
+        "core_path": [
+          {
+            "course": "C4",
+            "reason": "challenge"
+          }
+        ],
+        "optional_resources": [
+          {
+            "item": "C2",
+            "tag": "refresher"
+          },
+          {
+            "item": "waste_picker_toolkit",
+            "tag": "resource"
+          },
+          {
+            "item": "tot_manual",
+            "tag": "resource"
+          }
+        ],
+        "flags": []
       }
     }
   ]

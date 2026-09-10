@@ -1,306 +1,263 @@
 # SEA-MaP — Learner Self-Assessment → Course Recommendation
 
-Six-question quiz that works out which of the seven courses a learner should be enrolled in,
-and hands it back as JSON.
+Five questions in, a short ordered learning path out, plus a clearly separated list of
+optional extras. Framework-agnostic and dependency-free, so it imports the same way from a
+Next.js client component, a route handler, or a NestJS service.
 
-Two pieces, deliberately separate:
+The engine implements the client's *Course recommendation tool — Product logic & build
+specification*. Where this README explains a decision, the specification is the source of
+truth; the code carries no explanatory comments by design, so the reasoning lives here.
 
-- **`src/`** — the rules engine. Plain TypeScript, no runtime deps, no DOM. Runs in a Next.js
-  client component, a route handler, a NestJS service, or plain Node.
-- **`ui/`** — the quiz itself. React + Mantine, BEM class names, styles in one SCSS file. Copy
-  it into the Next app.
+## The shape of the answer
 
-Rules come from `Learner's Self-Assessment_simplified 1.pdf`. That document contradicts itself
-in a few places; where it does, the reading we went with is a flag in `src/config.ts` with the
-reasoning next to it.
+The tool picks a destination first — the difficulty the learner says they are facing right
+now — then builds the shortest sensible route to it, and offers everything else as clearly
+marked optional stops.
 
-**To put this in the app, follow [INTEGRATION.md](INTEGRATION.md).**
+- **Core path.** One to four courses, in order. Never empty.
+- **Optional resources.** Everything else, each item tagged and appearing exactly once.
+- **Flags.** Currently just the contradiction case, which changes copy and nothing else.
 
----
+The whole system reduces to one repeated decision: does this answer add something genuinely
+new, or does it only confirm something already covered?
 
 ## Quick start
 
 ```bash
 npm install
-npm run preview  # opens the quiz in a browser at localhost:5180
-npm test         # 117 tests
-npm run demo     # prints JSON for six sample learners
+npm test
+npm run demo
+npm run preview
 ```
 
-**`npm run preview` runs the real thing.** It renders exactly what will render in their app —
-same component, same styles, no dev chrome. The only difference is that the enrolment call is
-stubbed, since there's no session locally.
-
-The recommendation is logged to the **browser console** on submit:
-
-```
-[self-assessment] answers          { audience: 'ngo_cso', … }
-[self-assessment] recommendation   { mainLearningPath: […], enroll: {…} }
-[self-assessment] would enrol into 3 courses: [ 'foundations-of-…', … ]
-```
-
-`preview/main.tsx` is a working copy of the page — it's about 30 lines, and
-[`examples/nextjs-page.tsx`](examples/nextjs-page.tsx) is the same thing with the real API calls
-wired in.
+`npm run demo` prints a recommendation for each of the layout states the design has to
+handle and writes [`examples/sample-output.json`](examples/sample-output.json).
+`npm run preview` serves the real quiz with the real styles at `http://localhost:5180`.
 
 ```ts
 import { evaluate } from '@sea-map/learning-path-assessment';
 
-const result = evaluate({
-  audience: 'national_government',            // Q1 - required, pick one
-  application: ['epr_compliance'],            // Q2 - up to 2
-  challenges: ['data_technology_monitoring'], // Q3 - up to 2
-  interests: ['governance_coordination'],     // Q4 - up to 2
-  experience: 'intermediate',                 // Q5 - required, pick one
-  priorTraining: ['policy_epr'],              // Q6 - as many as apply
+const recommendation = evaluate({
+  audience: 'national_government',
+  challenge: 'coordination_governance',
+  experience: 'new_to_field',
+  application: ['design_policy_instruments'],
+  confidence: ['circular_economy'],
+  deliverTraining: false,
 });
 
-for (const courseId of result.enroll.courseIds) {
+for (const courseId of recommendation.enroll.courseIds) {
   await api.enrollCourse({ course: courseId });
 }
 ```
 
-### Course ids differ per environment
+## The questionnaire
 
-The ids in `src/courses.ts` came off **staging**
-(`GET https://sea-map-api.staging.catalyze.id/v2/course`). Production will differ. Slugs don't
-change, so rebind the catalog to whatever environment you're in:
+| | Question | Type | Feeds |
+| --- | --- | --- | --- |
+| Q1 | Audience | single | optional tier only |
+| Q2 | Intended application | up to 2, plus one uncapped option | core path |
+| Q3 | Challenges | single | the anchor |
+| Q4 | Experience | single | core path, Course 1 only |
+| Q5 | Prior competence | multi, with an exclusive option | demotes to optional |
 
-```ts
-const { data } = await api.getCourses();
-const result = evaluate(answers, { catalog: catalogFromApiCourses(data) });
-```
+Q2's training/facilitation option sits outside the two-selection cap and is carried on
+`answers.deliverTraining`, not inside `answers.application`. Passing `deliver_training`
+inside the array is rejected as an unknown option.
 
-Courses missing from the response keep their defaults, so a partial or failed response won't
-break anything.
+Q5's "None of these areas" is mutually exclusive with everything else. That is a UI
+constraint, enforced in [`applyExclusive`](ui/useAssessment.ts) and re-checked in
+validation, so an impossible combination can never reach the algorithm.
 
-> One caveat: the pdf only ever says "Course 1".."Course 7" and never names them. Which catalogue
-> course each number is was worked out by matching subject matter. All seven line up cleanly, but
-> it's worth a check from someone who knows the course content — see
-> [INTEGRATION.md](INTEGRATION.md#confirm-the-course-numbering).
+## The algorithm
 
-`enroll` is the flat, de-duplicated list to enroll — Main path first, then Additional. All three
-arrays line up index for index.
+Applied in this order, every time:
 
-On a retake, filter out what they already have first, so you're not firing calls that would just
-bounce:
+1. **Anchor.** The Q3 challenge becomes the first core course, reason `challenge`. If that
+   challenge is the community option, the Waste Picker Toolkit is queued as a resource.
+   This step always produces exactly one course, which is why the core path is never empty.
+2. **Experience gate.** If Q4 is "New to the field" and Course 1 is not already the anchor,
+   Course 1 goes to the front with reason `c1_gate` — unless Q5 says the learner is already
+   confident there, in which case it is queued as an optional refresher instead.
+3. **Application pass.** Each Q2 selection resolves to a course. Already in the core path,
+   skip it. Confident in it per Q5, queue it as a refresher. Otherwise append it with reason
+   `application`, in the order the learner selected.
+4. **Training pass.** If the training/facilitation option is selected, queue the Training of
+   Trainers Manual as a resource. It never takes a core slot, and neither does the Toolkit.
+5. **Audience pass.** Queue the audience's primary and secondary courses as `role`, and its
+   named resource, if any.
+6. **Resolve.** Drop anything already in the core path. Group by item and keep the
+   highest-precedence tag, so every item appears exactly once.
 
-```ts
-const pending = pendingEnrollments(result, alreadyEnrolledCourseIds);
-for (const courseId of pending.courseIds) { … }
-```
+Resulting order: Course 1 if present → the challenge course → application additions in
+selection order. Minimum length 1, maximum 4.
 
-Nothing is ever un-enrolled, including on a retake.
+### Why audience does not add courses
 
----
+An earlier build let Q1 populate the main path directly — a national government official
+received three courses before answering anything else, and with Q2 and the Course 1 gate on
+top the path routinely reached five to seven. That defeats the purpose of a focused path, so
+audience now contributes to the optional tier only. It is the weakest signal available: it
+describes who someone is, not what they are stuck on.
+
+### Tag precedence
+
+`refresher` → `role` → `resource`, highest first.
+
+A personalised signal the learner gave directly — confidence, via Q5 — outranks a generic
+role-based default. A named resource is the lowest-precedence fallback because it is never
+in competition with an actual course recommendation.
+
+Worked example: an NGO learner whose anchor is unrelated to Course 4, whose Q2 selection
+maps to Course 4, and who flagged that area in Q5. Step 3 queues Course 4 as `refresher`;
+step 5's audience pass queues it again as `role`. The refresher tag wins and Course 4 appears
+once.
+
+### The contradiction case
+
+A learner can name a topic as their biggest current difficulty in Q3 and also claim
+confidence in that same topic in Q5. The challenge always wins: confidence never demotes or
+removes the anchor. Instead `flags` carries `challenge_confidence_contradiction`, and the
+anchor card renders an alternate rationale sentence that acknowledges the stated confidence
+without implying the recommendation is optional.
+
+This is deliberately *not* a badge or tag. It is still the main recommendation and must not
+read as downgraded — the acknowledgement belongs in the sentence, not in a label.
+
+The same tension between Q4 and Q5 never surfaces, because step 2 routes Course 1 straight
+to the optional tier the moment Q5 flags it. Course 1 therefore never carries a contradiction
+flag.
 
 ## Output
 
-```jsonc
+```ts
 {
-  // priority pathway, from Q1 + Q2 (+ Course 1 via Q5). sorted by course number
-  "mainLearningPath": [
-    {
-      "courseNumber": 2,
-      "courseId": "6a3b4a8220a71b2b8c65188d",
-      "slug": "circular-economy-approaches-for-plastic-waste-management",
-      "title": "Circular Economy Approaches for Plastic Waste Management",
-      "isRefresher": false     // Q6 said they've already trained in this area
-    }
+  corePath: [
+    { courseNumber: 1, reason: 'c1_gate',   /* ...CourseRef */ },
+    { courseNumber: 7, reason: 'challenge', /* ... */ },
+    { courseNumber: 5, reason: 'application' },
   ],
-
-  // secondary suggestions, from Q3 + Q4 (+ Course 1 via Q5)
-  "additionalRecommendedCourses": [ /* same shape */ ],
-
-  // Not courses - downloads. Only the ToT materials so far, and only for
-  // trainers. Nobody gets enrolled into these.
-  "supplementaryResources": [
-    {
-      "key": "tot_facilitation_materials",
-      "title": "Trainer-of-Trainers Facilitation Materials",
-      "description": "Facilitation guides, manuals and short videos…",
-      "assets": [
-        { "type": "pdf", "title": "Facilitator handbook", "url": "/files/handbook.pdf" }
-      ]
-    }
+  optionalResources: [
+    { kind: 'course',   courseNumber: 2, tag: 'refresher' },
+    { kind: 'resource', key: 'tot_manual', tag: 'resource' },
   ],
-
-  // What to enrol into. Main path first, then additional, de-duped.
-  // All three arrays line up index for index.
-  "enroll": {
-    "courseNumbers": [2, 5, 1, 6],
-    "courseIds": ["6a3b4a82…", "6a3933d0…", "6a2b9e4b…", "6a3b4fc9…"],
-    "slugs": ["circular-economy-…", "business-engagement-…", "foundations-…", "technology-…"]
-  },
-
-  "notices": []
+  flags: [],
+  enroll: { courseNumbers: [1, 7, 5], courseIds: [...], slugs: [...] },
 }
 ```
 
-### `isRefresher`
+`reason` is `c1_gate | challenge | application`. `tag` is `refresher | role | resource`.
 
-Q6 asks what training the learner has already done. If an answer there matches a course they've
-been recommended, that course gets `isRefresher: true` and the results screen labels it
-*"Take only if a refresher is needed."* It never adds or removes a course — it only labels.
+`enroll` covers the **core path only**. Optional items are links the learner chooses to
+follow, so auto-enrolling them would reintroduce exactly the over-recommendation the
+specification set out to fix. `pendingEnrollments(recommendation, alreadyEnrolledIds)` filters
+out what the learner already has, which matters on a retake.
 
-Full output for six personas is in [`examples/sample-output.json`](examples/sample-output.json)
-(`npm run demo` regenerates it).
+The specification also describes a wire format with snake_case keys. `toSpecPayload()`
+produces it verbatim, for anyone integrating over HTTP rather than importing the module.
 
-### Notices
-
-Stable `code`, human `message`, and an `audience`.
-
-**Only render `audience: 'learner'` notices.** The others are for you and whoever's watching
-submissions — telling a learner their answers need reviewing isn't useful to them. `ResultPanel`
-already filters on this.
-
-| Code | Audience | Meaning |
-|---|---|---|
-| `TOT_MATERIALS_INCLUDED` | learner | They're also getting the ToT materials, which aren't a course. |
-| `EMPTY_RECOMMENDATION` | learner | Nothing qualified. Point them at the full catalogue. |
-| `REFRESHERS_EXCLUDED_FROM_ENROLLMENT` | internal | Refresher courses were held back from `enroll`. |
-
----
-
-## The quiz UI
-
-```tsx
-import { SelfAssessment } from '@/features/self-assessment/ui';
-import '@/features/self-assessment/ui/self-assessment.scss';
-
-<SelfAssessment onSubmit={handleSubmit} />
+```ts
+toSpecPayload(recommendation);
+// { core_path: [{ course: 'C7', reason: 'challenge' }],
+//   optional_resources: [{ item: 'C4', tag: 'refresher' }],
+//   flags: [] }
 ```
 
-One question per screen with a progress bar, then the results. It handles the "up to 2" caps
-(greys out the rest once you've picked two), the "please specify" box on Q1 Other, and Q6's
-"no prior training" clearing its siblings.
+## Course titles and slugs
 
-The results screen ends with **Retake assessment** / **Open training**, matching the mockup on
-pages 5 and 10 of the pdf. "Open training" defaults to the first course of the Main path — the
-mockup doesn't say what it should open, so override it with `openTrainingHref` if that's wrong.
+Titles come from the specification's Appendix A and are the strings that must appear on every
+card and list row — never a paraphrase or a shortened description.
 
-Everything renders off `QUESTIONS` and `RESULT_COPY` from the engine, so the wording and the
-rules can't drift apart.
+Four of them differ from the titles currently held in the platform's own course records
+(Courses 1, 4, 5 and 6). **Slugs deliberately do not change**: they are live URLs of the form
+`/training/<slug>`, and `foundations-of-plastics-and-plastic-waste-management` is still the
+address of Course 1 on staging. Titles and slugs are therefore decoupled.
 
-`onSubmit(answers) => Promise<Recommendation>` is yours — run `evaluate()`, call the API, enroll,
-return the result. Keeps the component free of any API client. There's a working version in
-[`examples/nextjs-page.tsx`](examples/nextjs-page.tsx).
+`catalogFromApiCourses()` binds ids and slugs to a live `GET /v2/course` response, matching on
+slug, and leaves titles alone. Courses missing from the response keep their defaults, so a
+partial or failed response degrades quietly.
 
-**On the styling:** built on Mantine (what the site already uses) with `self-assessment__*` BEM
-names to match their existing convention (`training-catalog__grid`, `banner-training__title`).
-Colours, spacing and radii all come from Mantine theme variables and the site's font variables
-rather than hardcoded values, so it picks up their brand automatically.
+```ts
+const catalog = catalogFromApiCourses(await api.getCourses());
+const recommendation = evaluate(answers, { catalog });
+```
 
-Worth knowing: their compiled stylesheet **404s on staging** (`d29701dd63156d91.css` returns
-"Not Found"), so exact brand colours couldn't be read off the live site. Using theme tokens
-sidesteps that. The one guess is the heading font — `--sa-font-heading` at the top of
-[`ui/self-assessment.scss`](ui/self-assessment.scss) is set to Reddit Sans Condensed; the site
-also loads Catamaran, so change that one line if the designs say otherwise.
+Whether the course records themselves should be renamed to match Appendix A is a decision for
+the client, not something this package should force.
 
----
+## Companion resources
 
-## API
+Two named items can appear in the optional tier, neither of which is a course and neither of
+which is ever enrolled into:
 
-| Export | What it does |
-|---|---|
-| `evaluate(answers, config?)` | Returns a `Recommendation`. Throws `AssessmentValidationError` on bad input. |
-| `safeEvaluate(answers, config?)` | Same, but returns `{ ok, recommendation, issues }`. |
-| `pendingEnrollments(rec, enrolledIds)` | Strips courses the learner already has. Use it before the enrol loop. |
-| `validateAnswers(answers)` | `ValidationIssue[]` — empty means valid. The quiz calls this on every change. |
-| `QUESTIONS` | All six questions and every option, as data. Render the quiz off this. |
-| `RESULT_COPY` | Results-screen headings and copy, from page 5 of the pdf. |
-| `COURSES`, `DEFAULT_CATALOG` | The seven courses with ids, slugs and titles. |
-| `catalogFromApiCourses(list)` | Rebind the catalog to a live `GET /v2/course` response, by slug. |
-| `buildCatalog({ byCourseNumber \| bySlug })` | Override ids/slugs/titles by hand. |
-| `DEFAULT_CONFIG` | Every flag and its default. |
-| `AUDIENCE_RULES` … `PRIOR_TRAINING_RULES` | Raw rule tables, if you want to display or audit them. |
+- **Waste Picker Training Toolkit** — queued by the community challenge, the informal-sector
+  application, and the community-based organization audience.
+- **Training of Trainers (ToT) Manual** — queued by the Q2 training/facilitation option.
 
----
-
-## How the rules work
-
-| Question | Feeds | Effect |
-|---|---|---|
-| **Q1** Audience (1) | Main path | Role → 1–7 courses. ToT grants all seven. |
-| **Q2** Intended application (≤2) | Main path | Each answer → 0–2 courses. "Deliver training" grants all seven. |
-| **Q3** Challenges (≤2) | Additional | Each answer → 0–1 course. |
-| **Q4** Interests (≤2) | Additional | Each answer → 0–1 course. |
-| **Q5** Experience (1) | Places **Course 1** | Beginner/Introductory → Main; Intermediate → Additional; Advanced/Expert → neither. |
-| **Q6** Previous training (any) | Labels only | Marks recommended courses `isRefresher`. **Never adds a course.** |
-
-Order: Q1 + Q2 → Main; Q3 + Q4 → Additional; Q5 places Course 1; duplicates collapse into Main;
-Q6 applies refresher labels; both lists sorted by course number.
-
-### Config
-
-Each flag is a place where the pdf contradicts itself. `src/config.ts` explains each one.
+Both ship with empty `assets` arrays. Drop the real files in through config and they render
+as downloads without a code change:
 
 ```ts
 evaluate(answers, {
-  deliverTrainingGrantsFullSet: true,     // item 1 — DECIDED: Q2 "deliver training" grants 1-7 + ToT
-  totOverridesCourse1Placement: true,     // item 4 — ToT keeps Course 1 in Main whatever Q5 says
-  duplicatePrecedence: 'main',            // item 5 — a duplicated course shows under Main
-  excludeRefreshersFromEnrollment: false, // item 8 — refreshers still get enrolled
-  fallbackToCourse1WhenEmpty: false,      // item 9 — empty stays empty
-  totMaterials: { title, description, assets },  // item 2 — the ToT downloads
-  catalog: DEFAULT_CATALOG,               // rebind per environment
+  resources: {
+    ...DEFAULT_RESOURCES,
+    tot_manual: {
+      ...DEFAULT_RESOURCES.tot_manual,
+      assets: [{ type: 'manual', title: 'ToT manual', url: '/files/tot.pdf' }],
+    },
+  },
 });
 ```
 
----
+## The quiz UI
+
+[`ui/`](ui) holds the React front end: Mantine components, BEM class names, and a stylesheet
+driven off Mantine tokens and the site font variables rather than hardcoded colours. It is
+kept out of the published build because it needs React and Mantine, which are dev
+dependencies here.
+
+- [`SelfAssessment`](ui/SelfAssessment.tsx) — the whole flow: intro, five steps, result.
+- [`QuestionStep`](ui/QuestionStep.tsx) — one question, with the uncapped option rendered in
+  its own group below the capped ones.
+- [`ResultPanel`](ui/ResultPanel.tsx) — the results page, built to the approved mockups.
+- [`useAssessment`](ui/useAssessment.ts) — state, validation, and navigation.
+
+The results page renders one card per core-path item joined by thin uniform arrows. The
+arrows carry no semantics: a hard prerequisite and a suggested next step look identical, on
+purpose. A single-course path renders one card that is not stretched to fill the row. When
+the optional list is empty the whole section is omitted rather than showing an empty state.
 
 ## Validation
 
-`evaluate()` rejects bad submissions rather than guessing; `safeEvaluate()` hands the problems
-back as data.
+`validateAnswers()` returns everything wrong with a set of answers, as data. The quiz calls it
+on every change to decide whether "Next" should surface an error.
 
-Q1 and Q5 required; Q2/Q3/Q4 capped at two; unknown option ids; duplicate selections; non-array
-multi-selects; Q1 "Other" needs free text; Q6 "no prior training" can't combine with anything else.
+Codes: `REQUIRED`, `UNKNOWN_OPTION`, `TOO_MANY_SELECTIONS`, `NOT_AN_ARRAY`,
+`DUPLICATE_SELECTION`, `MISSING_OTHER_TEXT`, `EXCLUSIVE_OPTION_CONFLICT`.
 
-```ts
-const result = safeEvaluate(answers);
-if (!result.ok) {
-  // [{ questionId: 'application', code: 'TOO_MANY_SELECTIONS', message: '…' }]
-  return res.status(400).json({ errors: result.issues });
-}
-```
+`evaluate()` throws `AssessmentValidationError` on invalid input; `safeEvaluate()` hands back
+the issues instead.
 
----
-
-## Layout
-
-```
-src/                  the engine (no react, no DOM)
-  types.ts  courses.ts  questions.ts  rules.ts  config.ts  validate.ts  evaluate.ts  index.ts
-ui/                    the quiz (react + mantine)
-  SelfAssessment.tsx   phases: intro -> questions -> result
-  QuestionStep.tsx     one question
-  ResultPanel.tsx      the results screen
-  useAssessment.ts     state, step nav, validation gating
-  self-assessment.scss BEM styles on mantine + site font tokens
-preview/               runnable copy of the page (npm run preview) - does not ship
-test/                  117 tests
-examples/              demo.ts, nextjs-page.tsx, sample-output.json
-```
-
-`npm run build` compiles `src/` only — `ui/` is meant to be copied into the Next app, since it
-needs React and Mantine from there.
+Validation is driven off the question definitions, so adding an option in
+[`questions.ts`](src/questions.ts) automatically extends it — and
+[`rules-coverage.test.ts`](test/rules-coverage.test.ts) fails the build if that option has no
+matching rule, which stops the quiz and the logic drifting apart.
 
 ## Verification
 
 ```bash
 npm test
 npm run typecheck
-npm run demo
+npm run build
+npm run states
 ```
 
-Covered: every option of all six questions; the page 5 sample result reproduced exactly; the
-page 7 worked example corrected to Courses 2, 3, 5; both readings of the Q2 conflict; ToT
-materials as a resource and its id plumbing; Course 1 placement across all five experience
-levels and both ToT settings; Q6 labelling without adding; de-duplication; enrolment list order
-and the retake filter; notice audience tagging; every validation rule; rebinding the catalog to a
-live API response; and the Q6 exclusive-option handling in the quiz.
+`npm run states` renders every layout state the results page has to handle — including the
+four-card row and the contradiction case — into `examples/layout-states.html` as a single
+self-contained file, using real engine output rather than placeholder text. Open it in a
+browser and resize to check wrapping.
 
-**Not verified:** the request body for `POST /v2/user/course`. The endpoint exists, but its call
-site isn't in the public bundle — the one line that builds that payload is marked `TODO` in
-`examples/nextjs-page.tsx` and needs checking against the repo.
+64 tests cover the algorithm step by step, the bounds the specification sets (never empty,
+never more than four), tag precedence and exactly-once resolution, the contradiction case,
+Appendix A titles, enrolment scope, and the wire payload. The layout states the design has to
+handle are enumerated as personas in [`examples/demo.ts`](examples/demo.ts).

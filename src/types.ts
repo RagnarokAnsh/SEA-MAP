@@ -147,7 +147,6 @@ export interface Recommendation {
 
 export interface EngineConfig {
   catalog: CourseCatalog;
-  resources: ResourceCatalog;
 }
 
 export type ValidationCode =

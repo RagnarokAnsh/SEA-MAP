@@ -205,16 +205,20 @@ which is ever enrolled into:
 Both ship with empty `assets` arrays. Drop the real files in through config and they render
 as downloads without a code change:
 
-```ts
-evaluate(answers, {
-  resources: {
+Because the engine names resources rather than embedding them, the catalogue is a
+presentation concern and goes to the component rather than to `evaluate()`:
+
+```tsx
+<SelfAssessment
+  onSubmit={handleSubmit}
+  resources={{
     ...DEFAULT_RESOURCES,
     tot_manual: {
       ...DEFAULT_RESOURCES.tot_manual,
       assets: [{ type: 'manual', title: 'ToT manual', url: '/files/tot.pdf' }],
     },
-  },
-});
+  }}
+/>
 ```
 
 ## The quiz UI

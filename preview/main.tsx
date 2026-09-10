@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@mantine/core/styles.css';
@@ -28,22 +28,45 @@ const RESOURCES: ResourceCatalog = {
 };
 
 function SelfAssessmentPage() {
-  const handleSubmit = async (answers: Answers): Promise<Recommendation> => {
-    const recommendation = evaluate(answers, { resources: RESOURCES });
+  const [answers, setAnswers] = useState<Answers | null>(null);
+  const [result, setResult] = useState<Recommendation | null>(null);
 
-    console.log('[self-assessment] answers', answers);
-    console.log('[self-assessment] recommendation', recommendation);
+  const handleSubmit = async (submitted: Answers): Promise<Recommendation> => {
+    const recommendation = evaluate(submitted);
+
+    setAnswers(submitted);
+    setResult(recommendation);
+
+    Object.assign(window, { answers: submitted, recommendation });
+    console.log('[self-assessment] answers\n' + JSON.stringify(submitted, null, 2));
     console.log(
-      '[self-assessment] would enrol into',
-      recommendation.enroll.courseNumbers.length,
-      'courses:',
-      recommendation.enroll.slugs,
+      '[self-assessment] recommendation\n' + JSON.stringify(recommendation, null, 2),
     );
 
     return recommendation;
   };
 
-  return <SelfAssessment onSubmit={handleSubmit} />;
+  return (
+    <>
+      <SelfAssessment onSubmit={handleSubmit} resources={RESOURCES} />
+      {result && (
+        <div className="preview-json">
+          <details open>
+            <summary>Engine response</summary>
+            <p className="preview-json__hint">
+              Also on the console, and as <code>window.recommendation</code> /{' '}
+              <code>window.answers</code>.
+            </p>
+            <pre>{JSON.stringify(result, null, 2)}</pre>
+          </details>
+          <details>
+            <summary>Answers that produced it</summary>
+            <pre>{JSON.stringify(answers, null, 2)}</pre>
+          </details>
+        </div>
+      )}
+    </>
+  );
 }
 
 createRoot(document.getElementById('root')!).render(

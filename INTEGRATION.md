@@ -132,23 +132,25 @@ Two named items can appear in the optional tier — the **Waste Picker Training 
 **Training of Trainers (ToT) Manual**. Neither is a course. Neither is ever enrolled into. Both
 ship with empty asset lists until you point them at the real files:
 
-```ts
+The engine returns resources by name, so the files are a presentation concern — pass the
+catalogue to the component, not to `evaluate()`:
+
+```tsx
 import { DEFAULT_RESOURCES } from '@/features/self-assessment/engine';
 
-evaluate(answers, {
-  catalog,
-  resources: {
-    ...DEFAULT_RESOURCES,
-    waste_picker_toolkit: {
-      ...DEFAULT_RESOURCES.waste_picker_toolkit,
-      assets: [{ type: 'pdf', title: 'Waste picker toolkit', url: '/files/toolkit.pdf' }],
-    },
-    tot_manual: {
-      ...DEFAULT_RESOURCES.tot_manual,
-      assets: [{ type: 'manual', title: 'ToT manual', url: '/files/tot-manual.pdf' }],
-    },
+const resources = {
+  ...DEFAULT_RESOURCES,
+  waste_picker_toolkit: {
+    ...DEFAULT_RESOURCES.waste_picker_toolkit,
+    assets: [{ type: 'pdf', title: 'Waste picker toolkit', url: '/files/toolkit.pdf' }],
   },
-});
+  tot_manual: {
+    ...DEFAULT_RESOURCES.tot_manual,
+    assets: [{ type: 'manual', title: 'ToT manual', url: '/files/tot-manual.pdf' }],
+  },
+};
+
+<SelfAssessment onSubmit={handleSubmit} resources={resources} />;
 ```
 
 Asset types are `'pdf' | 'video' | 'manual' | 'link'`. These are downloads — never pass them to

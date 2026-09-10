@@ -1,7 +1,52 @@
-/* Just enough to stand the page up on its own. In their app the site layout
-   provides all of this. */
 body {
   margin: 0;
   background: #fff;
   font-family: system-ui, sans-serif;
+}
+
+.preview-json {
+  max-width: 64rem;
+  margin: 0 auto 3rem;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.preview-json details {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.preview-json summary {
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #495057;
+}
+
+.preview-json__hint {
+  margin: 0 0.9rem 0.5rem;
+  font-size: 0.75rem;
+  color: #868e96;
+}
+
+.preview-json__hint code {
+  background: #e9ecef;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.preview-json pre {
+  margin: 0;
+  padding: 0 0.9rem 0.9rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: #212529;
 }

@@ -1,8 +1,10 @@
 import type {
   CourseCatalog,
+  CourseCode,
   CourseNumber,
   CourseRef,
   ResourceCatalog,
+  ResourceKey,
   ResourceRef,
 } from './types.js';
 
@@ -104,4 +106,23 @@ export function catalogFromApiCourses(
 
 export function getCourse(catalog: CourseCatalog, courseNumber: CourseNumber): CourseRef {
   return catalog[courseNumber];
+}
+
+export const RESOURCE_ITEM_NAMES: Record<ResourceKey, string> = Object.freeze({
+  waste_picker_toolkit: 'Waste Picker Training Toolkit',
+  tot_manual: 'Training of Trainers (ToT) Manual',
+});
+
+export function courseCode(courseNumber: CourseNumber): CourseCode {
+  return `C${courseNumber}` as CourseCode;
+}
+
+export function courseNumberFromCode(code: string): CourseNumber | null {
+  const match = /^C([1-7])$/.exec(code);
+  return match ? (Number(match[1]) as CourseNumber) : null;
+}
+
+export function resourceKeyFromItem(item: string): ResourceKey | null {
+  const entry = Object.entries(RESOURCE_ITEM_NAMES).find(([, name]) => name === item);
+  return entry ? (entry[0] as ResourceKey) : null;
 }

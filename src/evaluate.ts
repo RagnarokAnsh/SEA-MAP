@@ -1,4 +1,5 @@
 import { resolveConfig } from './config.js';
+import { courseCode, RESOURCE_ITEM_NAMES } from './courses.js';
 import {
   APPLICATION_RULES,
   AUDIENCE_RULES,
@@ -10,25 +11,22 @@ import {
 } from './rules.js';
 import type {
   Answers,
-  CorePathItem,
+  CorePathEntry,
   CourseNumber,
   EngineConfig,
   EvaluateResult,
-  OptionalItem,
+  OptionalEntry,
   OptionalTag,
   Recommendation,
   RecommendationFlag,
   ResourceKey,
-  SpecPayload,
 } from './types.js';
 import { AssessmentValidationError, validateAnswers } from './validate.js';
 
 type QueueKey = `course:${CourseNumber}` | `resource:${ResourceKey}`;
 
 interface QueueEntry {
-  kind: 'course' | 'resource';
-  courseNumber?: CourseNumber;
-  resourceKey?: ResourceKey;
+  item: string;
   tag: OptionalTag;
   order: number;
 }
@@ -56,20 +54,34 @@ export function safeEvaluate(
   const config = resolveConfig(overrides);
   const confident = confidenceCourses(answers);
   const flags: RecommendationFlag[] = [];
-  const corePath: CorePathItem[] = [];
+  const corePath: CorePathEntry[] = [];
+  const coreCourses: CourseNumber[] = [];
   const queue = new Map<QueueKey, QueueEntry>();
   let order = 0;
 
-  const inCorePath = (courseNumber: CourseNumber) =>
-    corePath.some((item) => item.courseNumber === courseNumber);
+  const inCorePath = (courseNumber: CourseNumber) => coreCourses.includes(courseNumber);
+
+  const addToCore = (
+    courseNumber: CourseNumber,
+    reason: CorePathEntry['reason'],
+    position: 'front' | 'end',
+  ) => {
+    const entry: CorePathEntry = { course: courseCode(courseNumber), reason };
+    if (position === 'front') {
+      corePath.unshift(entry);
+      coreCourses.unshift(courseNumber);
+    } else {
+      corePath.push(entry);
+      coreCourses.push(courseNumber);
+    }
+  };
 
   const queueCourse = (courseNumber: CourseNumber, tag: OptionalTag) => {
     const key: QueueKey = `course:${courseNumber}`;
     const existing = queue.get(key);
     if (existing && tagRank(existing.tag) <= tagRank(tag)) return;
     queue.set(key, {
-      kind: 'course',
-      courseNumber,
+      item: courseCode(courseNumber),
       tag,
       order: existing?.order ?? order++,
     });
@@ -78,18 +90,22 @@ export function safeEvaluate(
   const queueResource = (resourceKey: ResourceKey) => {
     const key: QueueKey = `resource:${resourceKey}`;
     if (queue.has(key)) return;
-    queue.set(key, { kind: 'resource', resourceKey, tag: 'resource', order: order++ });
+    queue.set(key, {
+      item: RESOURCE_ITEM_NAMES[resourceKey],
+      tag: 'resource',
+      order: order++,
+    });
   };
 
   const challenge = CHALLENGE_RULES[answers.challenge];
-  corePath.push({ ...config.catalog[challenge.course], reason: 'challenge' });
+  addToCore(challenge.course, 'challenge', 'end');
   if (challenge.resource) queueResource(challenge.resource);
   if (confident.has(challenge.course)) flags.push('challenge_confidence_contradiction');
 
   const gateCourse = EXPERIENCE_RULES[answers.experience];
   if (gateCourse !== null && !inCorePath(gateCourse)) {
     if (confident.has(gateCourse)) queueCourse(gateCourse, 'refresher');
-    else corePath.unshift({ ...config.catalog[gateCourse], reason: 'c1_gate' });
+    else addToCore(gateCourse, 'c1_gate', 'front');
   }
 
   for (const applicationId of answers.application ?? []) {
@@ -97,7 +113,7 @@ export function safeEvaluate(
     if (rule.resource) queueResource(rule.resource);
     if (inCorePath(rule.course)) continue;
     if (confident.has(rule.course)) queueCourse(rule.course, 'refresher');
-    else corePath.push({ ...config.catalog[rule.course], reason: 'application' });
+    else addToCore(rule.course, 'application', 'end');
   }
 
   if (answers.deliverTraining) queueResource(TRAINING_APPLICATION_RESOURCE);
@@ -107,23 +123,25 @@ export function safeEvaluate(
   if (audience.secondary !== null) queueCourse(audience.secondary, 'role');
   if (audience.resource !== null) queueResource(audience.resource);
 
-  const optionalResources: OptionalItem[] = [...queue.values()]
-    .filter((entry) => entry.kind === 'resource' || !inCorePath(entry.courseNumber!))
+  const optionalResources: OptionalEntry[] = [...queue.entries()]
+    .filter(([key]) => {
+      const courseNumber = key.startsWith('course:')
+        ? (Number(key.slice('course:'.length)) as CourseNumber)
+        : null;
+      return courseNumber === null || !inCorePath(courseNumber);
+    })
+    .map(([, entry]) => entry)
     .sort((a, b) => tagRank(a.tag) - tagRank(b.tag) || a.order - b.order)
-    .map((entry) =>
-      entry.kind === 'course'
-        ? { ...config.catalog[entry.courseNumber!], kind: 'course', tag: entry.tag }
-        : { ...config.resources[entry.resourceKey!], kind: 'resource', tag: 'resource' },
-    );
+    .map(({ item, tag }) => ({ item, tag }));
 
   const recommendation: Recommendation = {
-    corePath,
-    optionalResources,
+    core_path: corePath,
+    optional_resources: optionalResources,
     flags,
     enroll: {
-      courseNumbers: corePath.map((item) => item.courseNumber),
-      courseIds: corePath.map((item) => item.courseId),
-      slugs: corePath.map((item) => item.slug),
+      courseNumbers: [...coreCourses],
+      courseIds: coreCourses.map((n) => config.catalog[n].courseId),
+      slugs: coreCourses.map((n) => config.catalog[n].slug),
     },
   };
 
@@ -137,20 +155,6 @@ export function evaluate(
   const result = safeEvaluate(answers, overrides);
   if (!result.ok) throw new AssessmentValidationError(result.issues);
   return result.recommendation;
-}
-
-export function toSpecPayload(recommendation: Recommendation): SpecPayload {
-  return {
-    core_path: recommendation.corePath.map((item) => ({
-      course: `C${item.courseNumber}`,
-      reason: item.reason,
-    })),
-    optional_resources: recommendation.optionalResources.map((item) => ({
-      item: item.kind === 'course' ? `C${item.courseNumber}` : item.key,
-      tag: item.tag,
-    })),
-    flags: [...recommendation.flags],
-  };
 }
 
 export function pendingEnrollments(

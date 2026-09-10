@@ -103,7 +103,7 @@ const sections = STATES.map((state) => {
         <p class="state__id">State ${state.id.toUpperCase()}</p>
         <h2 class="state__title">${state.title}</h2>
         <p class="state__note">${state.note}</p>
-        <p class="state__data">core_path ${result.corePath.length} &middot; optional ${result.optionalResources.length} &middot; flags ${result.flags.join(', ') || 'none'}</p>
+        <p class="state__data">core_path ${result.core_path.length} &middot; optional_resources ${result.optional_resources.length} &middot; flags ${result.flags.join(', ') || 'none'}</p>
       </header>
       <div class="state__render">
         <section class="self-assessment self-assessment--result">${markup}</section>

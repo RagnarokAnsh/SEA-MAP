@@ -1,4 +1,4 @@
-export { evaluate, safeEvaluate, toSpecPayload, pendingEnrollments } from './evaluate.js';
+export { evaluate, safeEvaluate, pendingEnrollments } from './evaluate.js';
 export { validateAnswers, AssessmentValidationError } from './validate.js';
 
 export { QUESTIONS, RESULT_COPY, getQuestion } from './questions.js';
@@ -6,11 +6,15 @@ export {
   ALL_COURSE_NUMBERS,
   COURSES,
   RESOURCES,
+  RESOURCE_ITEM_NAMES,
   DEFAULT_CATALOG,
   DEFAULT_RESOURCES,
   buildCatalog,
   catalogFromApiCourses,
   getCourse,
+  courseCode,
+  courseNumberFromCode,
+  resourceKeyFromItem,
 } from './courses.js';
 export { DEFAULT_CONFIG, resolveConfig } from './config.js';
 
@@ -34,16 +38,15 @@ export type {
   ChallengeId,
   ConfidenceId,
   CoreReason,
-  CorePathItem,
+  CorePathEntry,
   CourseCatalog,
+  CourseCode,
   CourseNumber,
   CourseRef,
   EngineConfig,
   EvaluateResult,
   ExperienceId,
-  OptionalCourse,
-  OptionalItem,
-  OptionalResource,
+  OptionalEntry,
   OptionalTag,
   Question,
   QuestionId,
@@ -55,7 +58,6 @@ export type {
   ResourceCatalog,
   ResourceKey,
   ResourceRef,
-  SpecPayload,
   TrainingApplicationId,
   ValidationCode,
   ValidationIssue,

@@ -130,38 +130,46 @@ flag.
 
 ## Output
 
-```ts
+`evaluate()` returns the structure the specification documents, verbatim:
+
+```json
 {
-  corePath: [
-    { courseNumber: 1, reason: 'c1_gate',   /* ...CourseRef */ },
-    { courseNumber: 7, reason: 'challenge', /* ... */ },
-    { courseNumber: 5, reason: 'application' },
+  "core_path": [
+    { "course": "C1", "reason": "c1_gate" },
+    { "course": "C7", "reason": "challenge" },
+    { "course": "C5", "reason": "application" }
   ],
-  optionalResources: [
-    { kind: 'course',   courseNumber: 2, tag: 'refresher' },
-    { kind: 'resource', key: 'tot_manual', tag: 'resource' },
+  "optional_resources": [
+    { "item": "C4", "tag": "refresher" },
+    { "item": "Waste Picker Training Toolkit", "tag": "resource" }
   ],
-  flags: [],
-  enroll: { courseNumbers: [1, 7, 5], courseIds: [...], slugs: [...] },
+  "flags": []
 }
 ```
 
 `reason` is `c1_gate | challenge | application`. `tag` is `refresher | role | resource`.
+Courses appear as codes `C1`–`C7`; the two companion resources appear under their official
+names, which is how the specification identifies them. Every item appears at most once.
 
-`enroll` covers the **core path only**. Optional items are links the learner chooses to
-follow, so auto-enrolling them would reintroduce exactly the over-recommendation the
+Four of the specification's five worked examples are asserted verbatim in
+[`evaluate.test.ts`](test/evaluate.test.ts), so the documented contract is pinned by tests
+rather than by convention.
+
+Alongside those three fields the result carries an `enroll` block, which is an addition for
+the platform integration rather than part of the specification:
+
+```ts
+enroll: { courseNumbers: [1, 7, 5], courseIds: [...], slugs: [...] }
+```
+
+It covers the **core path only**, in path order. Optional items are links the learner chooses
+to follow, so auto-enrolling them would reintroduce exactly the over-recommendation the
 specification set out to fix. `pendingEnrollments(recommendation, alreadyEnrolledIds)` filters
 out what the learner already has, which matters on a retake.
 
-The specification also describes a wire format with snake_case keys. `toSpecPayload()`
-produces it verbatim, for anyone integrating over HTTP rather than importing the module.
-
-```ts
-toSpecPayload(recommendation);
-// { core_path: [{ course: 'C7', reason: 'challenge' }],
-//   optional_resources: [{ item: 'C4', tag: 'refresher' }],
-//   flags: [] }
-```
+Rendering a result means resolving codes against the catalogue. `courseNumberFromCode()` and
+`resourceKeyFromItem()` do that, and `ResultPanel` uses them internally — pass it a `catalog`
+and `resources` if you are not using the defaults.
 
 ## Course titles and slugs
 
@@ -257,7 +265,8 @@ four-card row and the contradiction case — into `examples/layout-states.html` 
 self-contained file, using real engine output rather than placeholder text. Open it in a
 browser and resize to check wrapping.
 
-64 tests cover the algorithm step by step, the bounds the specification sets (never empty,
+69 tests cover the algorithm step by step, the four reproducible worked examples from the
+specification asserted verbatim, the bounds the specification sets (never empty,
 never more than four), tag precedence and exactly-once resolution, the contradiction case,
 Appendix A titles, enrolment scope, and the wire payload. The layout states the design has to
 handle are enumerated as personas in [`examples/demo.ts`](examples/demo.ts).

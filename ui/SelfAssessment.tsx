@@ -2,7 +2,13 @@
 
 import { Alert, Button, Group, Progress, Text, Title } from '@mantine/core';
 
-import type { Answers, Recommendation } from '../src/types.js';
+import type {
+  Answers,
+  CourseCatalog,
+  CourseRef,
+  Recommendation,
+  ResourceCatalog,
+} from '../src/types.js';
 import { QuestionStep } from './QuestionStep.js';
 import { ResultPanel } from './ResultPanel.js';
 import { useAssessment, type Phase } from './useAssessment.js';
@@ -18,13 +24,17 @@ const INTRO = {
 export interface SelfAssessmentProps {
   onSubmit: (answers: Answers) => Promise<Recommendation>;
   onRestart?: () => void;
-  courseHref?: (item: { slug: string }) => string;
+  catalog?: CourseCatalog;
+  resources?: ResourceCatalog;
+  courseHref?: (course: CourseRef) => string;
   startAt?: Phase;
 }
 
 export function SelfAssessment({
   onSubmit,
   onRestart,
+  catalog,
+  resources,
   courseHref,
   startAt,
 }: SelfAssessmentProps) {
@@ -56,6 +66,8 @@ export function SelfAssessment({
       <section className="self-assessment self-assessment--result">
         <ResultPanel
           result={a.result}
+          catalog={catalog}
+          resources={resources}
           courseHref={courseHref}
           onRestart={onRestart ?? a.restart}
         />

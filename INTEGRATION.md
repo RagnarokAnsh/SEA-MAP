@@ -11,7 +11,7 @@ src/       the rules engine - plain TypeScript, no dependencies at all
 ui/        the quiz screens - React + Mantine + one SCSS file
 examples/  a ready-made page component and some sample output
 preview/   a runnable copy of the page so you can see it before wiring it up
-test/      64 tests
+test/      69 tests
 ```
 
 You need `src/` and `ui/`. Everything else is reference.
@@ -227,13 +227,19 @@ per-course assessment — a different feature.
 Store the `answers` **and** the `recommendation`. If a rule changes later, old submissions can be
 re-run against the new rules without asking anyone to retake anything.
 
-If you would rather return the specification's own wire shape than the engine's objects, wrap the
-result in `toSpecPayload()`:
+`evaluate()` already returns the specification's documented shape, so the response body needs no
+translation:
 
-```ts
-return toSpecPayload(recommendation);
-// { core_path: [...], optional_resources: [...], flags: [...] }
+```json
+{
+  "core_path": [{ "course": "C7", "reason": "challenge" }],
+  "optional_resources": [{ "item": "C4", "tag": "refresher" }],
+  "flags": [],
+  "enroll": { "courseNumbers": [7], "courseIds": ["..."], "slugs": ["..."] }
+}
 ```
+
+Drop `enroll` from the response if the endpoint does the enrolling itself.
 
 The frontend barely changes — `handleSubmit` posts to this endpoint instead of calling
 `evaluate()` locally.
@@ -249,6 +255,11 @@ form rather than using `ui/`, use `splitApplicationSelection()` to separate them
 
 **Only the core path is enrolled.** Optional items are links the learner chooses to follow.
 Auto-enrolling them would put back the over-recommendation this logic was written to remove.
+
+**Courses come back as codes, not objects.** `core_path` entries carry `"C1"`–`"C7"` and
+`optional_resources` entries carry either a code or a resource's official name. Resolve them with
+`courseNumberFromCode()` and `resourceKeyFromItem()` against the catalogue — `ResultPanel` does
+this internally, so you only need it if you render the result yourself.
 
 **The contradiction flag changes copy, never courses.** When `flags` contains
 `challenge_confidence_contradiction`, the anchor card swaps its rationale sentence and nothing

@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { evaluate, toSpecPayload } from '../src/index.js';
+import { evaluate } from '../src/index.js';
 import type { Answers, Recommendation } from '../src/types.js';
 
 interface Persona {
@@ -77,24 +77,20 @@ const PERSONAS: Persona[] = [
 ];
 
 function summarise(recommendation: Recommendation): string {
-  const path = recommendation.corePath
-    .map((item) => `Course ${item.courseNumber} (${item.reason})`)
+  const path = recommendation.core_path
+    .map((entry) => `${entry.course} (${entry.reason})`)
     .join(' -> ');
 
   const optional =
-    recommendation.optionalResources
-      .map((item) =>
-        item.kind === 'course'
-          ? `Course ${item.courseNumber} [${item.tag}]`
-          : `${item.title} [${item.tag}]`,
-      )
+    recommendation.optional_resources
+      .map((entry) => `${entry.item} [${entry.tag}]`)
       .join(', ') || '(none)';
 
   return [
-    `  Core path : ${path}`,
-    `  Optional  : ${optional}`,
-    `  Enrol     : ${recommendation.enroll.courseNumbers.join(', ')}`,
-    `  Flags     : ${recommendation.flags.join(', ') || '(none)'}`,
+    `  core_path         : ${path}`,
+    `  optional_resources: ${optional}`,
+    `  flags             : ${recommendation.flags.join(', ') || '(none)'}`,
+    `  enrol             : ${recommendation.enroll.courseNumbers.join(', ')}`,
   ].join('\n');
 }
 
@@ -107,7 +103,6 @@ const output = PERSONAS.map((persona) => {
     note: persona.note,
     answers: persona.answers,
     recommendation,
-    specPayload: toSpecPayload(recommendation),
   };
 });
 
@@ -120,8 +115,9 @@ writeFileSync(
         'Sample output from `npm run demo`.',
         '',
         '"persona" and "note" label the samples in this file - they are NOT part of',
-        'the engine response. The contract is the "recommendation" object, and',
-        '"specPayload" is the same result in the wire shape the specification uses.',
+        'the engine response. The contract is the "recommendation" object, whose',
+        'core_path / optional_resources / flags fields are the shape documented in',
+        'the specification. "enroll" is an addition for the platform integration.',
         '',
         'Course ids are staging ids. Rebind per environment with catalogFromApiCourses().',
       ].join('\n'),

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { COURSES, DEFAULT_CATALOG, DEFAULT_RESOURCES, RESOURCES } from '../src/courses.js';
+import {
+  COURSES,
+  courseNumberFromCode,
+  DEFAULT_CATALOG,
+  DEFAULT_RESOURCES,
+  RESOURCE_ITEM_NAMES,
+  RESOURCES,
+} from '../src/courses.js';
 import { QUESTIONS } from '../src/questions.js';
 import {
   APPLICATION_RULES,
@@ -144,5 +151,23 @@ describe('catalogue', () => {
 
   it('names both companion resources', () => {
     expect(RESOURCES.map((r) => r.key)).toEqual(['waste_picker_toolkit', 'tot_manual']);
+  });
+
+  it('uses the official resource names as output item values', () => {
+    expect(RESOURCE_ITEM_NAMES).toEqual({
+      waste_picker_toolkit: 'Waste Picker Training Toolkit',
+      tot_manual: 'Training of Trainers (ToT) Manual',
+    });
+    for (const resource of RESOURCES) {
+      expect(RESOURCE_ITEM_NAMES[resource.key]).toBe(resource.title);
+    }
+  });
+
+  it('round-trips course codes', () => {
+    for (const course of COURSES) {
+      expect(courseNumberFromCode(`C${course.courseNumber}`)).toBe(course.courseNumber);
+    }
+    expect(courseNumberFromCode('C8')).toBeNull();
+    expect(courseNumberFromCode('Waste Picker Training Toolkit')).toBeNull();
   });
 });

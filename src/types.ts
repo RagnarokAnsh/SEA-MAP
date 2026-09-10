@@ -116,43 +116,33 @@ export interface Answers {
   confidence?: ConfidenceId[];
 }
 
+export type CourseCode = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'C7';
+
 export type CoreReason = 'c1_gate' | 'challenge' | 'application';
 
 export type OptionalTag = 'refresher' | 'role' | 'resource';
 
 export type RecommendationFlag = 'challenge_confidence_contradiction';
 
-export interface CorePathItem extends CourseRef {
+export interface CorePathEntry {
+  course: CourseCode;
   reason: CoreReason;
 }
 
-export interface OptionalCourse extends CourseRef {
-  kind: 'course';
+export interface OptionalEntry {
+  item: string;
   tag: OptionalTag;
 }
 
-export interface OptionalResource extends ResourceRef {
-  kind: 'resource';
-  tag: 'resource';
-}
-
-export type OptionalItem = OptionalCourse | OptionalResource;
-
 export interface Recommendation {
-  corePath: CorePathItem[];
-  optionalResources: OptionalItem[];
+  core_path: CorePathEntry[];
+  optional_resources: OptionalEntry[];
   flags: RecommendationFlag[];
   enroll: {
     courseNumbers: CourseNumber[];
     courseIds: string[];
     slugs: string[];
   };
-}
-
-export interface SpecPayload {
-  core_path: Array<{ course: string; reason: CoreReason }>;
-  optional_resources: Array<{ item: string; tag: OptionalTag }>;
-  flags: RecommendationFlag[];
 }
 
 export interface EngineConfig {
